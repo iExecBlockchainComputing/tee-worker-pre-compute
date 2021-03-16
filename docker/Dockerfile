@@ -8,7 +8,7 @@ WORKDIR $HOME
 COPY app/build.gradle app/gradle.properties settings.gradle  ./
 COPY app/src/ src/
 RUN gradle build -i --no-daemon
-RUN ls /home/build/libs
+
 
 # Build app container
 FROM openjdk:11.0.3-jre-slim
