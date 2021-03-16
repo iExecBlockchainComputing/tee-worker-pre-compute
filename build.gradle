@@ -74,7 +74,7 @@ tasks.named('test') {
 
 docker {
     name 'docker.io/iexechub/' + rootProject.name + ':dev'
-    dockerfile file('../docker/Dockerfile-local')
+    dockerfile file('docker/Dockerfile-local')
     files('build/libs/' + fatJar)
     buildArgs([JAR_PATH: fatJar ])
 }
