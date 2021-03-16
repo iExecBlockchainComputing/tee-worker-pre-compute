@@ -5,8 +5,8 @@ ARG JAR_PATH=$HOME/build/libs/app-all.jar
 FROM gradle:6.8.3-jdk11 as gradle-builder
 ARG HOME
 WORKDIR $HOME
-COPY app/build.gradle app/gradle.properties settings.gradle  ./
-COPY app/src/ src/
+COPY build.gradle gradle.properties settings.gradle  ./
+COPY src/ src/
 RUN gradle build -i --no-daemon
 
 
