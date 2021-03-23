@@ -60,13 +60,31 @@ public class PreComputeApp {
     }
 
     /**
-     * This method decrypts t
+     * 1. Run all necessary checks
+     * <p>
+     * 2. Decrypt the dataset.
+     * <p>
+     * 3. Unzip the plain dataset file to prepare
+     * the correct hierarchy.
+     * <p>
      * 
      * Before:
-     * |--
+     * <pre>
+     * iexec_in
+     *   ├── 0x369024f0e0db0858e43ced79292aec047e4ceffeec3c66590975707dc2eda098
+     *   └── input-file1.txt
+     * </pre>
+     * where 0x360.... is the encrypted dataset file.
+     * <p>
      * 
      * After:
-     * 
+     * <pre>
+     * iexec_in
+     *   ├── 0x369024f0e0db0858e43ced79292aec047e4ceffeec3c66590975707dc2eda098/
+     *   │   ├── plain-file1.txt
+     *   │   └── plain-file2.txt
+     *   └── input-file1.txt
+     * </pre>
      * @throws PreComputeException
      */
     public void start() throws PreComputeException {
