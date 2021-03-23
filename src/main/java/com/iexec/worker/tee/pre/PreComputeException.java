@@ -16,9 +16,21 @@
 
 package com.iexec.worker.tee.pre;
 
-public class App {
+import com.iexec.common.precompute.PreComputeExitCode;
+import lombok.Getter;
 
-    public static void main(String[] args) {
-        PreComputeApp.run();
+@SuppressWarnings("serial")
+public class PreComputeException extends Exception {
+
+    @Getter
+    private PreComputeExitCode exitCode;
+
+    public PreComputeException(PreComputeExitCode exitCode) {
+        this(exitCode, "");
+    }
+
+    public PreComputeException(PreComputeExitCode exitCode, String message) {
+        super(message);
+        this.exitCode = exitCode;
     }
 }
