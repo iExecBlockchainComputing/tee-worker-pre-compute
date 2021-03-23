@@ -57,12 +57,13 @@ jar {
 }
 
 def app = 'app'
-def fatJar = "${app}-${version}-all.jar" // app-0.1.0-SNAPSHOT-all.jar
+def fatJar = "${app}-all.jar"
 
 // Jar with all dependencies (app-all.jar)
 shadowJar {
     mainClassName = mainClass
     archiveBaseName.set(app)
+    archiveVersion.set('') // remove version from name
 }
 
 tasks.named('test') {

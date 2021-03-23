@@ -139,9 +139,8 @@ public class PreComputeApp {
     }
 
     /**
-     * Decrypt dataset, replace the encrypted file
-     * with the new plain file, and unzip it if
-     * needed.
+     * Decrypt dataset and replace the encrypted file
+     * with the new plain file.
      * @throws PreComputeException
      */
     void decryptDataset() throws PreComputeException {
