@@ -20,7 +20,9 @@ import com.iexec.common.precompute.PreComputeExitCode;
 import com.iexec.common.precompute.PreComputeUtils;
 import com.iexec.common.security.CipherUtils;
 import com.iexec.common.utils.FileHelper;
+import com.iexec.common.utils.HashUtils;
 import com.iexec.common.utils.IexecEnvUtils;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -28,21 +30,15 @@ import java.io.File;
 import java.security.GeneralSecurityException;
 
 @Slf4j
+@NoArgsConstructor
 public class PreComputeApp {
 
-    private final String chainTaskId;
-    private final String iexecInFolder;
-    private final String base64DatasetKey;
-    private final String datasetFilename;
-    private final String datasetFilepath;
-
-    public PreComputeApp() throws PreComputeException {
-        this.chainTaskId = getEnvVarOrThrow(IexecEnvUtils.IEXEC_TASK_ID_ENV_PROPERTY);
-        this.iexecInFolder = getEnvVarOrThrow(IexecEnvUtils.IEXEC_IN_ENV_PROPERTY);
-        this.base64DatasetKey = getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_KEY_PROPERTY);
-        this.datasetFilename = getEnvVarOrThrow(IexecEnvUtils.IEXEC_DATASET_FILENAME_ENV_PROPERTY);
-        this.datasetFilepath = this.iexecInFolder + File.separator + this.datasetFilename;
-    }
+    private String chainTaskId;
+    private String iexecInFolder;
+    private String base64DatasetKey;
+    private String datasetChecksum;
+    private String datasetFilename;
+    private String datasetFilepath;
 
     public static void run() {
         log.info("TEE pre-compute started");
@@ -87,7 +83,13 @@ public class PreComputeApp {
      * </pre>
      * @throws PreComputeException
      */
-    public void start() throws PreComputeException {
+    void start() throws PreComputeException {
+        this.chainTaskId = getEnvVarOrThrow(IexecEnvUtils.IEXEC_TASK_ID_ENV_PROPERTY);
+        this.iexecInFolder = getEnvVarOrThrow(IexecEnvUtils.IEXEC_IN_ENV_PROPERTY);
+        this.base64DatasetKey = getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_KEY_PROPERTY);
+        this.datasetChecksum = getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_CHECKSUM_PROPERTY);
+        this.datasetFilename = getEnvVarOrThrow(IexecEnvUtils.IEXEC_DATASET_FILENAME_ENV_PROPERTY);
+        this.datasetFilepath = this.iexecInFolder + File.separator + this.datasetFilename;
         checkInputFolder();
         checkDatasetFile();
         checkDatasetChecksum();
@@ -107,44 +109,43 @@ public class PreComputeApp {
     void checkInputFolder() throws PreComputeException {
         log.info("Checking input folder [chainTaskId:{}, path:{}]",
                 this.chainTaskId, this.iexecInFolder);
-        if (!new File(this.iexecInFolder).isDirectory()) {
-            log.error("Input folder not found [chainTaskId:{}, path:{}]",
-                    this.chainTaskId, this.iexecInFolder);
-            throw new PreComputeException(PreComputeExitCode.INPUT_FOLDER_NOT_FOUND);
+        if (new File(this.iexecInFolder).isDirectory()) {
+            return;
         }
+        log.error("Input folder not found [chainTaskId:{}, path:{}]",
+                this.chainTaskId, this.iexecInFolder);
+        throw new PreComputeException(PreComputeExitCode.INPUT_FOLDER_NOT_FOUND);
     }
 
     void checkDatasetFile() throws PreComputeException {
         log.info("Checking dataset file [chainTaskId:{}, path:{}]",
                 this.chainTaskId, this.datasetFilepath);
-        if (!new File(this.datasetFilepath).isFile()) {
-            log.error("Dataset file not found [chainTaskId:{}, path:{}]",
-                    this.chainTaskId, this.datasetFilepath);
-            throw new PreComputeException(PreComputeExitCode.DATASET_FILE_NOT_FOUND);
+        if (new File(this.datasetFilepath).isFile()) {
+            return;
         }
+        log.error("Dataset file not found [chainTaskId:{}, path:{}]",
+                this.chainTaskId, this.datasetFilepath);
+        throw new PreComputeException(PreComputeExitCode.DATASET_FILE_NOT_FOUND);
     }
 
     void checkDatasetChecksum() throws PreComputeException {
-        // TODO
         log.info("Checking dataset checksum [chainTaskId:{}]", this.chainTaskId);
-        if (!isValidDatasetChecksum()) {
-            log.info("Invalid dataset checksum [chainTaskId:{}, expected:{}, actual:{}]",
-                    this.chainTaskId, "expected", "actual");
-            throw new PreComputeException(PreComputeExitCode.INVALID_DATASET_CHECKSUM);
+        String actualChecksum = HashUtils.getFileSha256(this.datasetFilepath);
+        if (actualChecksum.equals(this.datasetChecksum)) {
+            return;
         }
-    }
-
-    boolean isValidDatasetChecksum() {
-        // TODO
-        return true;
+        log.info("Invalid dataset checksum [chainTaskId:{}, expected:{}, actual:{}]",
+                this.chainTaskId, this.datasetChecksum, actualChecksum);
+        throw new PreComputeException(PreComputeExitCode.INVALID_DATASET_CHECKSUM);
     }
 
     void checkDatasetKey() throws PreComputeException {
         log.info("Checking dataset key [chainTaskId:{}]", this.chainTaskId);
-        if (StringUtils.isBlank(this.base64DatasetKey)) {
-            log.error("Empty dataset key [chainTaskId:{}]", this.chainTaskId);
-            throw new PreComputeException(PreComputeExitCode.INVALID_DATASET_KEY);
+        if (StringUtils.isNotBlank(this.base64DatasetKey)) {
+            return;
         }
+        log.error("Empty dataset key [chainTaskId:{}]", this.chainTaskId);
+        throw new PreComputeException(PreComputeExitCode.INVALID_DATASET_KEY);
     }
 
     /**
