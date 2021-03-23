@@ -31,14 +31,12 @@ dependencies {
     implementation "com.iexec.common:iexec-common:$iexecCommonVersion"
     //implementation files("../iexec-common/build/libs/iexec-common-${iexecCommonVersion}.jar")
 
-    // Use JUnit Jupiter API for testing.
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.2'
-
-    // Use JUnit Jupiter Engine for testing.
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
-
-    // This dependency is used by the application.
-    implementation 'com.google.guava:guava:29.0-jre'
+    // test
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.0'
+    testImplementation 'org.mockito:mockito-core:3.6.0'
+    testImplementation 'org.mockito:mockito-junit-jupiter:3.6.0'
+    testImplementation 'org.assertj:assertj-core:3.18.1'
 }
 
 def mainClass = 'com.iexec.worker.tee.pre.App'
@@ -59,12 +57,13 @@ jar {
 }
 
 def app = 'app'
-def fatJar = app + '-all.jar' //app-all.jar
+def fatJar = "${app}-all.jar"
 
 // Jar with all dependencies (app-all.jar)
 shadowJar {
     mainClassName = mainClass
     archiveBaseName.set(app)
+    archiveVersion.set('') // remove version from name
 }
 
 tasks.named('test') {
@@ -74,8 +73,12 @@ tasks.named('test') {
 
 docker {
     name 'docker.io/iexechub/' + rootProject.name + ':dev'
-    dockerfile file('docker/Dockerfile-local')
+    dockerfile file('docker/Dockerfile.local')
     files('build/libs/' + fatJar)
     buildArgs([JAR_PATH: fatJar ])
 }
 tasks.docker.dependsOn tasks.build
+
+task buildImage {
+    dependsOn tasks.docker
+}
