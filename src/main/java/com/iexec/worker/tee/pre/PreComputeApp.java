@@ -93,7 +93,6 @@ public class PreComputeApp {
         checkInputFolder();
         checkDatasetFile();
         checkDatasetChecksum();
-        checkDatasetKey();
         decryptDataset();
     }
 
@@ -137,15 +136,6 @@ public class PreComputeApp {
         log.info("Invalid dataset checksum [chainTaskId:{}, expected:{}, actual:{}]",
                 this.chainTaskId, this.datasetChecksum, actualChecksum);
         throw new PreComputeException(PreComputeExitCode.INVALID_DATASET_CHECKSUM);
-    }
-
-    void checkDatasetKey() throws PreComputeException {
-        log.info("Checking dataset key [chainTaskId:{}]", this.chainTaskId);
-        if (StringUtils.isNotBlank(this.base64DatasetKey)) {
-            return;
-        }
-        log.error("Empty dataset key [chainTaskId:{}]", this.chainTaskId);
-        throw new PreComputeException(PreComputeExitCode.INVALID_DATASET_KEY);
     }
 
     /**
