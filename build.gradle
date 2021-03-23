@@ -56,7 +56,7 @@ jar {
 }
 
 def app = 'app'
-def fatJar = app + '-all.jar' //app-all.jar
+def fatJar = "${app}-${version}-all.jar" // app-0.1.0-SNAPSHOT-all.jar
 
 // Jar with all dependencies (app-all.jar)
 shadowJar {
@@ -71,8 +71,12 @@ tasks.named('test') {
 
 docker {
     name 'docker.io/iexechub/' + rootProject.name + ':dev'
-    dockerfile file('docker/Dockerfile-local')
+    dockerfile file('docker/Dockerfile.local')
     files('build/libs/' + fatJar)
     buildArgs([JAR_PATH: fatJar ])
 }
 tasks.docker.dependsOn tasks.build
+
+task buildImage {
+    dependsOn tasks.docker
+}

@@ -22,7 +22,6 @@ import com.iexec.common.security.CipherUtils;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.IexecEnvUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
@@ -33,15 +32,16 @@ public class PreComputeApp {
 
     private final String chainTaskId;
     private final String iexecInFolder;
-    private final String datasetFilename;
     private final String base64DatasetKey;
-    private String plainDatasetFilepath;
+    private final String datasetFilename;
+    private final String datasetFilepath;
 
     public PreComputeApp() throws PreComputeException {
         this.chainTaskId = getEnvVarOrThrow(IexecEnvUtils.IEXEC_TASK_ID_ENV_PROPERTY);
         this.iexecInFolder = getEnvVarOrThrow(IexecEnvUtils.IEXEC_IN_ENV_PROPERTY);
-        this.datasetFilename = getEnvVarOrThrow(IexecEnvUtils.IEXEC_DATASET_FILENAME_ENV_PROPERTY);
         this.base64DatasetKey = getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_KEY_PROPERTY);
+        this.datasetFilename = getEnvVarOrThrow(IexecEnvUtils.IEXEC_DATASET_FILENAME_ENV_PROPERTY);
+        this.datasetFilepath = this.iexecInFolder + File.separator + this.datasetFilename;
     }
 
     public static void run() {
@@ -93,8 +93,6 @@ public class PreComputeApp {
         checkDatasetChecksum();
         checkDatasetKey();
         decryptDataset();
-        // renamePlainDatasetFile();
-        unzipPlainDataset();
     }
 
     String getEnvVarOrThrow(String envVarName) throws PreComputeException {
@@ -117,24 +115,28 @@ public class PreComputeApp {
     }
 
     void checkDatasetFile() throws PreComputeException {
-        log.info("Checking dataset file [chainTaskId:{}, filename:{}]",
-                this.chainTaskId, this.datasetFilename);
-        if (!new File(getDatasetFilepath()).isFile()) {
-            log.error("Dataset file not found [chainTaskId:{}, filename:{}]",
-                    this.chainTaskId, this.datasetFilename);
+        log.info("Checking dataset file [chainTaskId:{}, path:{}]",
+                this.chainTaskId, this.datasetFilepath);
+        if (!new File(this.datasetFilepath).isFile()) {
+            log.error("Dataset file not found [chainTaskId:{}, path:{}]",
+                    this.chainTaskId, this.datasetFilepath);
             throw new PreComputeException(PreComputeExitCode.DATASET_FILE_NOT_FOUND);
         }
     }
 
-    void checkDatasetChecksum() {
-        log.info("Checking dataset file checksum [chainTaskId:{}]");
+    void checkDatasetChecksum() throws PreComputeException {
+        // TODO
+        log.info("Checking dataset checksum [chainTaskId:{}]", this.chainTaskId);
         if (!isValidDatasetChecksum()) {
-            log.info("Invalid dataset checksum [chainTaskId:{}, expected:{}]", this.chainTaskId);
+            log.info("Invalid dataset checksum [chainTaskId:{}, expected:{}, actual:{}]",
+                    this.chainTaskId, "expected", "actual");
+            throw new PreComputeException(PreComputeExitCode.INVALID_DATASET_CHECKSUM);
         }
     }
 
     boolean isValidDatasetChecksum() {
-        return false;
+        // TODO
+        return true;
     }
 
     void checkDatasetKey() throws PreComputeException {
@@ -155,12 +157,11 @@ public class PreComputeApp {
         log.info("Decrypting dataset [chainTaskId:{}]", this.chainTaskId);
         byte[] plainData = new byte[0];
         byte[] base64DatasetKeyBytes = this.base64DatasetKey.getBytes();
-        String datasetFilepath = getDatasetFilepath();
         // read dataset file
-        byte[] datasetFileContent = FileHelper.readAllBytes(datasetFilepath);
+        byte[] datasetFileContent = FileHelper.readAllBytes(this.datasetFilepath);
         if (datasetFileContent == null) {
             log.error("Failed to read dataset file content [chainTaskId:{}, path:{}]",
-                    this.chainTaskId, datasetFilepath);
+                    this.chainTaskId, this.datasetFilepath);
             throw new PreComputeException(PreComputeExitCode.IO_ERROR);
         }
         // decrypt dataset
@@ -172,49 +173,22 @@ public class PreComputeApp {
             throw new PreComputeException(PreComputeExitCode.DATASET_DECRYPTION_ERROR);
         }
         // remove old encrypted file
-        log.info("Removing encrypted dataset file [chainTaskId:{}]",
-                this.chainTaskId, datasetFilepath);
-        if (!FileHelper.deleteFile(datasetFilepath)) {
+        log.info("Removing encrypted dataset file [chainTaskId:{}, path:{}]",
+                this.chainTaskId, this.datasetFilepath);
+        if (!FileHelper.deleteFile(this.datasetFilepath)) {
             log.error("Failed to remove encrypted dataset file [chainTaskId:{}, path:{}]",
-                    this.chainTaskId, datasetFilepath);
+                    this.chainTaskId, this.datasetFilepath);
             throw new PreComputeException(PreComputeExitCode.IO_ERROR);
         }
         log.info("Removed encrypted dataset file [chainTaskId:{}]", this.chainTaskId);
         // write decrypted file to disk
-        log.info("Writing plain dataset file [chainTaskId:{}]", this.chainTaskId);
-        String plainDatasetFilepath = datasetFilepath;
-        if (!FilenameUtils.getExtension(plainDatasetFilepath).equals("zip")) {
-            plainDatasetFilepath += ".zip";
-        }
-        if (!FileHelper.writeFile(plainDatasetFilepath, plainData)) {
+        log.info("Writing plain dataset file [chainTaskId:{}, path:{}]",
+                this.chainTaskId, this.datasetFilepath);
+        if (!FileHelper.writeFile(this.datasetFilepath, plainData)) {
             log.error("Failed to write plain dataset file [chainTaskId:{}, path:{}]",
-                    this.chainTaskId, plainDatasetFilepath);
+                    this.chainTaskId, this.datasetFilepath);
             throw new PreComputeException(PreComputeExitCode.IO_ERROR);
         }
-        this.plainDatasetFilepath = plainDatasetFilepath;
         log.info("Wrote plain dataset file to disk [chainTaskId:{}]", this.chainTaskId);
-    }
-
-    // /**
-    //  * We rename the dataset file into something
-    //  * predictable by the worker and the other
-    //  * compute components. We use the chainTaskId.
-    //  */
-    // void renamePlainDatasetFile() {
-    //     String newName = FilenameUtils.getPath(this.plainDatasetFilepath) +
-    //             this.chainTaskId;
-    //     FileHelper.renameFile(this.plainDatasetFilepath, newName);
-    // }
-
-    void unzipPlainDataset() {
-        String newFolderPath = FileHelper.unZipFile(this.plainDatasetFilepath);
-        if (newFolderPath.isEmpty()) {
-            log.error("Failed to unzip plain dataset file [chainTaskId:{}]",
-                    this.chainTaskId);
-        }
-    }
-
-    String getDatasetFilepath() {
-        return this.iexecInFolder + File.separator + this.datasetFilename;
     }
 }

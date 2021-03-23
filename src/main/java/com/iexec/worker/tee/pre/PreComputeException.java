@@ -26,7 +26,7 @@ public class PreComputeException extends Exception {
     private PreComputeExitCode exitCode;
 
     public PreComputeException(PreComputeExitCode exitCode) {
-        this(exitCode, "");
+        this(exitCode, exitCode.name());
     }
 
     public PreComputeException(PreComputeExitCode exitCode, String message) {
