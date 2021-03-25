@@ -1,6 +1,6 @@
 ## CI/CD version
 ## git clone, then cd into
-## docker image build -f docker/Dockerfile -t nexus.iex.ec/tee-worker-pre-compute:1.0.0 . --no-cache
+## docker image build -f docker/Dockerfile -t nexus.iex.ec/tee-worker-pre-compute:dev . --no-cache
 
 ARG HOME=/home
 ARG JAR_PATH=$HOME/build/libs/app-all.jar
@@ -23,7 +23,7 @@ RUN apk add bash --no-cache
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.5/community" >> /etc/apk/repositories \
     && apk update
 
-COPY --from=gradle-builder $JAR_PATH app.jar
+COPY --from=gradle-builder $JAR_PATH /app/tee-worker-pre-compute.jar
 
 RUN SCONE_MODE=sim SCONE_HEAP=128M                                          \
     && mkdir conf                                                           \
@@ -49,4 +49,5 @@ RUN SCONE_MODE=sim SCONE_HEAP=128M                                          \
     && echo $FINGERPRINT > conf/fingerprint.txt                             \
     && printf "\n########################################################\nMREnclave: \n$FINGERPRINT\n########################################################\n\n"
 
-ENTRYPOINT [ "/bin/sh", "-c", "exec java -jar app.jar" ]
+ENTRYPOINT java -jar /app/tee-worker-pre-compute.jar
+# ENTRYPOINT [ "/bin/sh", "-c", "exec /app/tee-worker-pre-compute.jar" ]
