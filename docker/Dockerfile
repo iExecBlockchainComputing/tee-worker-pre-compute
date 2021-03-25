@@ -15,9 +15,9 @@ RUN gradle build -i --no-daemon
 
 FROM nexus.iex.ec/sconecuratedimages-iexec:openjdk11-alpine3.10-test
 #FROM sconecuratedimages/iexec:openjdk11-alpine3.10-test
-COPY --from=iexechub/sconecuratedimages-iexec:cli-alpine /opt/scone/scone-cli /opt/scone/scone-cli
-COPY --from=iexechub/sconecuratedimages-iexec:cli-alpine /usr/local/bin/scone /usr/local/bin/scone
-COPY --from=iexechub/sconecuratedimages-iexec:cli-alpine /opt/scone/bin /opt/scone/bin
+COPY --from=nexus.iex.ec/sconecuratedimages-iexec:cli-alpine /opt/scone/scone-cli /opt/scone/scone-cli
+COPY --from=nexus.iex.ec/sconecuratedimages-iexec:cli-alpine /usr/local/bin/scone /usr/local/bin/scone
+COPY --from=nexus.iex.ec/sconecuratedimages-iexec:cli-alpine /opt/scone/bin /opt/scone/bin
 RUN apk add bash --no-cache
 
 RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.5/community" >> /etc/apk/repositories \
