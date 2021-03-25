@@ -47,7 +47,7 @@ public class PreComputeApp {
         } catch(PreComputeException e) {
             log.error("TEE pre-compute failed with a known error [exitCode:{}]",
                     e.getExitCode(), e);
-            System.exit(e.getExitCode().getValue());
+            System.exit(e.getExitCode().value());
         } catch (Exception e) {
             log.error("TEE pre-compute failed with an unexpected error", e);
             System.exit(1);
