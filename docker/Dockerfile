@@ -49,5 +49,5 @@ RUN SCONE_MODE=sim SCONE_HEAP=128M                                          \
     && echo $FINGERPRINT > conf/fingerprint.txt                             \
     && printf "\n########################################################\nMREnclave: \n$FINGERPRINT\n########################################################\n\n"
 
-# this should match the cmd entry in the SMS's palaemon config
+# /!\ this should match the "command" entry in the SMS's palaemon config
 ENTRYPOINT [ "/bin/sh", "-c", "java -jar /app/tee-worker-pre-compute.jar" ]
