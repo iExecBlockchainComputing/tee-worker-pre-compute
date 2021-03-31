@@ -5,7 +5,10 @@
 ARG HOME=/home
 ARG JAR_PATH=$HOME/build/libs/app-all.jar
 
-# Build jar
+###
+### Build application jar
+###
+
 FROM gradle:6.8.3-jdk11 as gradle-builder
 ARG HOME
 WORKDIR $HOME
@@ -13,15 +16,12 @@ COPY build.gradle gradle.properties settings.gradle  ./
 COPY src/ src/
 RUN gradle build -i --no-daemon
 
-FROM nexus.iex.ec/sconecuratedimages-iexec:openjdk11-alpine3.10-test
-#FROM sconecuratedimages/iexec:openjdk11-alpine3.10-test
-COPY --from=nexus.iex.ec/sconecuratedimages-iexec:cli-alpine /opt/scone/scone-cli /opt/scone/scone-cli
-COPY --from=nexus.iex.ec/sconecuratedimages-iexec:cli-alpine /usr/local/bin/scone /usr/local/bin/scone
-COPY --from=nexus.iex.ec/sconecuratedimages-iexec:cli-alpine /opt/scone/bin /opt/scone/bin
-RUN apk add bash --no-cache
+###
+### Build the final image with
+### the produced jar.
+###
 
-RUN echo "http://dl-cdn.alpinelinux.org/alpine/v3.5/community" >> /etc/apk/repositories \
-    && apk update
+FROM registry.scontain.com:5050/sconecuratedimages/apps:jdk-alpine-scone3.0
 
 COPY --from=gradle-builder $JAR_PATH /app/tee-worker-pre-compute.jar
 
@@ -49,5 +49,5 @@ RUN SCONE_MODE=sim SCONE_HEAP=128M                                          \
     && echo $FINGERPRINT > conf/fingerprint.txt                             \
     && printf "\n########################################################\nMREnclave: \n$FINGERPRINT\n########################################################\n\n"
 
-ENTRYPOINT java -jar /app/tee-worker-pre-compute.jar
-# ENTRYPOINT [ "/bin/sh", "-c", "exec /app/tee-worker-pre-compute.jar" ]
+# this should match the cmd entry in the SMS's palaemon config
+ENTRYPOINT [ "/bin/sh", "-c", "java -jar /app/tee-worker-pre-compute.jar" ]

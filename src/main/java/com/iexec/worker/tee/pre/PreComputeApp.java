@@ -49,38 +49,36 @@ public class PreComputeApp {
                     e.getExitCode(), e);
             System.exit(e.getExitCode().value());
         } catch (Exception e) {
-            log.error("TEE pre-compute failed with an unexpected error", e);
+            log.error("TEE pre-compute failed with an unknown error", e);
             System.exit(1);
         }
         log.info("TEE pre-compute finished");
     }
 
     /**
-     * 1. Run all necessary checks
-     * <p>
-     * 2. Decrypt the dataset.
-     * <p>
-     * 3. Unzip the plain dataset file to prepare
-     * the correct hierarchy.
+     * Run all necessary checks and decrypt the dataset file.
      * <p>
      * 
      * Before:
      * <pre>
      * iexec_in
-     *   ├── 0x369024f0e0db0858e43ced79292aec047e4ceffeec3c66590975707dc2eda098
+     *   ├── dataset-name
      *   └── input-file1.txt
      * </pre>
-     * where 0x360.... is the encrypted dataset file.
+     * where dataset-name is the encrypted dataset file name.
      * <p>
      * 
      * After:
      * <pre>
      * iexec_in
-     *   ├── 0x369024f0e0db0858e43ced79292aec047e4ceffeec3c66590975707dc2eda098/
-     *   │   ├── plain-file1.txt
-     *   │   └── plain-file2.txt
+     *   ├── dataset-name
      *   └── input-file1.txt
      * </pre>
+     * where dataset-name is the plain dataset file name.
+     * <p>
+     * It can be a single file or a an archive. Archives
+     * won't be extracted.
+     * 
      * @throws PreComputeException
      */
     void start() throws PreComputeException {
