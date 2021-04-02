@@ -54,8 +54,10 @@ RUN SCONE_MODE=sim SCONE_HEAP=128M && \
     # pre-compute enclave because in the case of authenticated or encrypted
     # regions we cannot read random files that are not protected with a
     # volume.fspf file.
-    # (This line seems to be optional, we keep it for readability purposes.)
-    scone fspf addr ${FSPF_PB_FILE} /pre-compute --not-protected --kernel /pre-compute && \
+    # ###
+    # ### (This line seems to be optional, we keep it for readability purposes.)
+    # ### scone fspf addr ${FSPF_PB_FILE} /pre-compute --not-protected --kernel /pre-compute && \
+    # ###
     # Encrypt fspf.pb file with a randomly generated key
     scone fspf encrypt ${FSPF_PB_FILE} > ${FSPF_PB_FILE_KEYTAG} && \
     # Get the runtime mrenclave
