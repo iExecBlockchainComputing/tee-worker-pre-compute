@@ -32,8 +32,8 @@ RUN SCONE_MODE=sim SCONE_HEAP=128M && \
     FSPF_PB_FILE_KEYTAG=/fspf.keytag && \
     # This path can be change safely.
     FINGERPRINT_FILE=/fingerprint.txt && \
-    # This value must match the heap size value provided
-    # by the worker when booting the enclave.
+    # This value must match the heap size value
+    # provided at runtime.
     RUNTIME_HEAP_SIZE=3G && \
     # Save the current file system state in fspf.pb file.
     scone fspf create ${FSPF_PB_FILE}                                           && \
