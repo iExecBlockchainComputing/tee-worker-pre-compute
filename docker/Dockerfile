@@ -17,11 +17,11 @@ COPY src/ src/
 RUN gradle build -i --no-daemon
 
 ###
-### Build the final image with
+### Build the final sconified image with
 ### the produced jar.
 ###
 
-FROM registry.scontain.com:5050/sconecuratedimages/apps:jdk-alpine-scone3.0
+FROM nexus.iex.ec/sconecuratedimages-apps-java:jdk-alpine-scone3.0
 
 COPY --from=gradle-builder $JAR_PATH /app/tee-worker-pre-compute.jar
 
