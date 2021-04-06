@@ -22,7 +22,7 @@ RUN gradle build -i --no-daemon
 ###
 
 FROM nexus.iex.ec/sconecuratedimages-apps-java:jdk-alpine-scone3.0
-
+ARG JAR_PATH
 COPY --from=gradle-builder $JAR_PATH /app/tee-worker-pre-compute.jar
 
 RUN SCONE_MODE=sim SCONE_HEAP=128M && \
