@@ -16,9 +16,21 @@
 
 package com.iexec.worker.tee.pre;
 
-public class App {
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-    public static void main(String[] args) {
-        PreComputeApp.run();
-    }
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class PreComputeInput {
+
+    private String chainTaskId;
+    private String encryptedDatasetUrl;
+    private String encryptedDatasetBase64Key;
+    private String encryptedDatasetChecksum;
+    private String plainDatasetFilename;
+    private String outputDir;
 }
