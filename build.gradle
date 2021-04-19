@@ -39,7 +39,7 @@ dependencies {
     testImplementation 'org.assertj:assertj-core:3.18.1'
 }
 
-def mainClass = 'com.iexec.worker.tee.pre.App'
+def mainClass = 'com.iexec.worker.tee.pre.Main'
 
 //gradle run
 application {
