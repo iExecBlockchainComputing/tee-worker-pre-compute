@@ -25,7 +25,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PreComputeInput {
+public class PreComputeArgs {
 
     private String chainTaskId;
     private String encryptedDatasetUrl;

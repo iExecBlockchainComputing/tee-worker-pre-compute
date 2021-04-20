@@ -31,7 +31,7 @@ import java.security.GeneralSecurityException;
 public class PreComputeApp {
 
     private String chainTaskId; // just for convenience
-    private PreComputeInput input;
+    private PreComputeArgs preComputeArgs;
     private byte[] encryptedDatasetContent;
     private byte[] plainDatasetContent;
 
@@ -50,7 +50,7 @@ public class PreComputeApp {
     }
 
     void init() throws PreComputeException {
-        input = PreComputeInput.builder()
+        preComputeArgs = PreComputeArgs.builder()
                 .chainTaskId(getEnvVarOrThrow(IexecEnvUtils.IEXEC_TASK_ID_ENV_PROPERTY))
                 .outputDir(getEnvVarOrThrow(PreComputeUtils.IEXEC_PRE_COMPUTE_OUT))
                 .encryptedDatasetUrl(getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_URL))
@@ -58,7 +58,7 @@ public class PreComputeApp {
                 .encryptedDatasetChecksum(getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_CHECKSUM))
                 .plainDatasetFilename(getEnvVarOrThrow(IexecEnvUtils.IEXEC_DATASET_FILENAME_ENV_PROPERTY))
                 .build();
-        chainTaskId = input.getChainTaskId();
+        chainTaskId = preComputeArgs.getChainTaskId();
 
     }
 
@@ -72,7 +72,7 @@ public class PreComputeApp {
     }
 
     void checkOutputFolder() throws PreComputeException {
-        String outputDir = input.getOutputDir();
+        String outputDir = preComputeArgs.getOutputDir();
         log.info("Checking output folder [chainTaskId:{}, path:{}]",
                 chainTaskId, outputDir);
         if (new File(outputDir).isDirectory()) {
@@ -84,7 +84,7 @@ public class PreComputeApp {
     }
 
     void downloadEncryptedDataset() throws PreComputeException {
-        String encryptedDatasetUrl = input.getEncryptedDatasetUrl();
+        String encryptedDatasetUrl = preComputeArgs.getEncryptedDatasetUrl();
         log.info("Downloading encrypted dataset file [chainTaskId:{}, url:{}]",
                 chainTaskId, encryptedDatasetUrl);
         encryptedDatasetContent = FileHelper.readFileBytesFromUrl(encryptedDatasetUrl);
@@ -94,7 +94,7 @@ public class PreComputeApp {
             throw new PreComputeException(PreComputeExitCode.DATASET_DOWNLOAD_FAILED);
         }
         log.info("Checking encrypted dataset checksum [chainTaskId:{}]", chainTaskId);
-        String expectedChecksum = input.getEncryptedDatasetChecksum();
+        String expectedChecksum = preComputeArgs.getEncryptedDatasetChecksum();
         String actualChecksum = HashUtils.sha256(encryptedDatasetContent);
         if (!actualChecksum.equals(expectedChecksum)) {
             log.info("Invalid dataset checksum [chainTaskId:{}, expected:{}, actual:{}]",
@@ -105,7 +105,7 @@ public class PreComputeApp {
 
     void decryptDataset() throws PreComputeException {
         log.info("Decrypting dataset [chainTaskId:{}]", chainTaskId);
-        String key = input.getEncryptedDatasetBase64Key();
+        String key = preComputeArgs.getEncryptedDatasetBase64Key();
         try {
             plainDatasetContent = CipherUtils.aesDecrypt(encryptedDatasetContent, key.getBytes());
         } catch (GeneralSecurityException e) {
@@ -116,8 +116,8 @@ public class PreComputeApp {
     }
 
     void writePlainDatasetFile() throws PreComputeException {
-        String plainDatasetFilepath = input.getOutputDir() + File.separator +
-                input.getPlainDatasetFilename();
+        String plainDatasetFilepath = preComputeArgs.getOutputDir() + File.separator +
+                preComputeArgs.getPlainDatasetFilename();
         log.info("Writing plain dataset file [chainTaskId:{}, path:{}]",
                 chainTaskId, plainDatasetFilepath);
         if (!FileHelper.writeFile(plainDatasetFilepath, plainDatasetContent)) {
