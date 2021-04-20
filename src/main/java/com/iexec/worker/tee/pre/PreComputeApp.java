@@ -22,182 +22,109 @@ import com.iexec.common.security.CipherUtils;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.HashUtils;
 import com.iexec.common.utils.IexecEnvUtils;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.security.GeneralSecurityException;
 
 @Slf4j
-@NoArgsConstructor
 public class PreComputeApp {
 
-    private String chainTaskId;
-    private String preComputeInFolder;
-    private String preComputeOutFolder;
-    private String base64DatasetKey;
-    private String encryptedDatasetChecksum;
-    private String datasetFilename;
-    private String encryptedDatasetFilepath;
-    private String plainDatasetFilepath;
-
-    public static void run() {
-        log.info("TEE pre-compute started");
-        try {
-            new PreComputeApp().start();
-        } catch(PreComputeException e) {
-            log.error("TEE pre-compute failed with a known error [exitCode:{}]",
-                    e.getExitCode(), e);
-            System.exit(e.getExitCode().value());
-        } catch (Exception e) {
-            log.error("TEE pre-compute failed with an unknown error", e);
-            System.exit(1);
-        }
-        log.info("TEE pre-compute finished");
-    }
+    private String chainTaskId; // just for convenience
+    private PreComputeArgs preComputeArgs;
+    private byte[] encryptedDatasetContent;
+    private byte[] plainDatasetContent;
 
     /**
-     * Run all necessary checks and decrypt the dataset file.
-     * The encrypted file should be in /pre-compute-in folder
-     * and the decrypted file will be written to /iexec_in.
-     * <p>
-     * 
-     * Before:
-     * <pre>
-     * ---------
-     * /pre-compute-in
-     *   └── dataset-name <-- encrypted file
-     * 
-     * /iexec_in
-     *   └── 
-     * </pre>
-     * <p>
-     * 
-     * After:
-     * <pre>
-     * ---------
-     * /pre-compute-in
-     *   └──
-     * 
-     * /iexec_in
-     *   └── dataset-name <-- decrypted file
-     * </pre>
-     * <p>
-     * The decrypted file can be a single file or a an archive.
-     * Archives won't be extracted.
+     * Download, decrypt, and save the plain dataset file in "/iexec_in".
+     * If the decrypted file is an archive, it won't be extracted.
      * 
      * @throws PreComputeException
      */
-    void start() throws PreComputeException {
-        this.chainTaskId = getEnvVarOrThrow(IexecEnvUtils.IEXEC_TASK_ID_ENV_PROPERTY);
-        this.datasetFilename = getEnvVarOrThrow(IexecEnvUtils.IEXEC_DATASET_FILENAME_ENV_PROPERTY);
-        this.preComputeInFolder = getEnvVarOrThrow(PreComputeUtils.IEXEC_PRE_COMPUTE_IN_PROPERTY);
-        this.preComputeOutFolder = getEnvVarOrThrow(PreComputeUtils.IEXEC_PRE_COMPUTE_OUT_PROPERTY);
-        this.base64DatasetKey = getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_KEY_PROPERTY);
-        this.encryptedDatasetChecksum = getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_CHECKSUM_PROPERTY);
-        this.encryptedDatasetFilepath = this.preComputeInFolder + File.separator + this.datasetFilename;
-        this.plainDatasetFilepath = this.preComputeOutFolder + File.separator + this.datasetFilename;
-        checkInputFolder();
+    void run() throws PreComputeException {
+        init();
         checkOutputFolder();
-        checkDatasetFile();
-        checkDatasetChecksum();
+        downloadEncryptedDataset();
         decryptDataset();
+        writePlainDatasetFile();
+    }
+
+    void init() throws PreComputeException {
+        preComputeArgs = PreComputeArgs.builder()
+                .chainTaskId(getEnvVarOrThrow(IexecEnvUtils.IEXEC_TASK_ID_ENV_PROPERTY))
+                .outputDir(getEnvVarOrThrow(PreComputeUtils.IEXEC_PRE_COMPUTE_OUT))
+                .encryptedDatasetUrl(getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_URL))
+                .encryptedDatasetBase64Key(getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_KEY))
+                .encryptedDatasetChecksum(getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_CHECKSUM))
+                .plainDatasetFilename(getEnvVarOrThrow(IexecEnvUtils.IEXEC_DATASET_FILENAME_ENV_PROPERTY))
+                .build();
+        chainTaskId = preComputeArgs.getChainTaskId();
+
     }
 
     String getEnvVarOrThrow(String envVarName) throws PreComputeException {
         String envVar = System.getenv(envVarName);
         if (envVar == null || envVar.isEmpty()) {
-            log.error("Required env var is blank [name:{}]", envVarName);
+            log.error("Required env var is empty [name:{}]", envVarName);
             throw new PreComputeException(PreComputeExitCode.EMPTY_REQUIRED_ENV_VAR);
         }
         return envVar;
     }
 
-    void checkInputFolder() throws PreComputeException {
-        log.info("Checking input folder [chainTaskId:{}, path:{}]",
-                this.chainTaskId, this.preComputeInFolder);
-        if (new File(this.preComputeInFolder).isDirectory()) {
-            return;
-        }
-        log.error("Input folder not found [chainTaskId:{}, path:{}]",
-                this.chainTaskId, this.preComputeInFolder);
-        throw new PreComputeException(PreComputeExitCode.INPUT_FOLDER_NOT_FOUND);
-    }
-
     void checkOutputFolder() throws PreComputeException {
+        String outputDir = preComputeArgs.getOutputDir();
         log.info("Checking output folder [chainTaskId:{}, path:{}]",
-                this.chainTaskId, this.preComputeOutFolder);
-        if (new File(this.preComputeOutFolder).isDirectory()) {
+                chainTaskId, outputDir);
+        if (new File(outputDir).isDirectory()) {
             return;
         }
         log.error("Output folder not found [chainTaskId:{}, path:{}]",
-                this.chainTaskId, this.preComputeOutFolder);
+                chainTaskId, outputDir);
         throw new PreComputeException(PreComputeExitCode.OUTPUT_FOLDER_NOT_FOUND);
     }
 
-    void checkDatasetFile() throws PreComputeException {
-        log.info("Checking dataset file [chainTaskId:{}, path:{}]",
-                this.chainTaskId, this.encryptedDatasetFilepath);
-        if (new File(this.encryptedDatasetFilepath).isFile()) {
-            return;
+    void downloadEncryptedDataset() throws PreComputeException {
+        String encryptedDatasetUrl = preComputeArgs.getEncryptedDatasetUrl();
+        log.info("Downloading encrypted dataset file [chainTaskId:{}, url:{}]",
+                chainTaskId, encryptedDatasetUrl);
+        encryptedDatasetContent = FileHelper.readFileBytesFromUrl(encryptedDatasetUrl);
+        if (encryptedDatasetContent == null) {
+            log.error("Failed to download encrypted dataset file [chainTaskId:{}, url:{}]",
+                    chainTaskId, encryptedDatasetUrl);
+            throw new PreComputeException(PreComputeExitCode.DATASET_DOWNLOAD_FAILED);
         }
-        log.error("Dataset file not found [chainTaskId:{}, path:{}]",
-                this.chainTaskId, this.encryptedDatasetFilepath);
-        throw new PreComputeException(PreComputeExitCode.DATASET_FILE_NOT_FOUND);
+        log.info("Checking encrypted dataset checksum [chainTaskId:{}]", chainTaskId);
+        String expectedChecksum = preComputeArgs.getEncryptedDatasetChecksum();
+        String actualChecksum = HashUtils.sha256(encryptedDatasetContent);
+        if (!actualChecksum.equals(expectedChecksum)) {
+            log.info("Invalid dataset checksum [chainTaskId:{}, expected:{}, actual:{}]",
+                    chainTaskId, expectedChecksum, actualChecksum);
+            throw new PreComputeException(PreComputeExitCode.INVALID_DATASET_CHECKSUM);
+        }
     }
 
-    void checkDatasetChecksum() throws PreComputeException {
-        log.info("Checking dataset checksum [chainTaskId:{}]", this.chainTaskId);
-        String actualChecksum = HashUtils.getFileSha256(this.encryptedDatasetFilepath);
-        if (actualChecksum.equals(this.encryptedDatasetChecksum)) {
-            return;
-        }
-        log.info("Invalid dataset checksum [chainTaskId:{}, expected:{}, actual:{}]",
-                this.chainTaskId, this.encryptedDatasetChecksum, actualChecksum);
-        throw new PreComputeException(PreComputeExitCode.INVALID_DATASET_CHECKSUM);
-    }
-
-    /**
-     * Decrypt dataset, remove the encrypted file,
-     * and write the new plain file in preComputeOutFolder.
-     * @throws PreComputeException
-     */
     void decryptDataset() throws PreComputeException {
-        log.info("Decrypting dataset [chainTaskId:{}]", this.chainTaskId);
-        byte[] plainData = new byte[0];
-        byte[] base64DatasetKeyBytes = this.base64DatasetKey.getBytes();
-        // read dataset file
-        byte[] datasetFileContent = FileHelper.readAllBytes(this.encryptedDatasetFilepath);
-        if (datasetFileContent == null) {
-            log.error("Failed to read dataset file content [chainTaskId:{}, path:{}]",
-                    this.chainTaskId, this.encryptedDatasetFilepath);
-            throw new PreComputeException(PreComputeExitCode.IO_ERROR);
-        }
-        // decrypt dataset
+        log.info("Decrypting dataset [chainTaskId:{}]", chainTaskId);
+        String key = preComputeArgs.getEncryptedDatasetBase64Key();
         try {
-            plainData = CipherUtils.aesDecrypt(datasetFileContent, base64DatasetKeyBytes);
-            log.info("Decrypted dataset [chainTaskId:{}]", this.chainTaskId);
+            plainDatasetContent = CipherUtils.aesDecrypt(encryptedDatasetContent, key.getBytes());
         } catch (GeneralSecurityException e) {
-            log.error("Failed to decrypt dataset [chainTaskId:{}]", this.chainTaskId, e);
-            throw new PreComputeException(PreComputeExitCode.DATASET_DECRYPTION_ERROR);
+            log.error("Failed to decrypt dataset [chainTaskId:{}]", chainTaskId, e);
+            throw new PreComputeException(PreComputeExitCode.DATASET_DECRYPTION_FAILED);
         }
-        // remove old encrypted file
-        log.info("Removing encrypted dataset file [chainTaskId:{}, path:{}]",
-                this.chainTaskId, this.encryptedDatasetFilepath);
-        if (!FileHelper.deleteFile(this.encryptedDatasetFilepath)) {
-            log.error("Failed to remove encrypted dataset file [chainTaskId:{}, path:{}]",
-                    this.chainTaskId, this.encryptedDatasetFilepath);
-            throw new PreComputeException(PreComputeExitCode.IO_ERROR);
-        }
-        log.info("Removed encrypted dataset file [chainTaskId:{}]", this.chainTaskId);
-        // write decrypted file to disk
+        log.info("Decrypted dataset [chainTaskId:{}]", chainTaskId);
+    }
+
+    void writePlainDatasetFile() throws PreComputeException {
+        String plainDatasetFilepath = preComputeArgs.getOutputDir() + File.separator +
+                preComputeArgs.getPlainDatasetFilename();
         log.info("Writing plain dataset file [chainTaskId:{}, path:{}]",
-                this.chainTaskId, this.plainDatasetFilepath);
-        if (!FileHelper.writeFile(this.plainDatasetFilepath, plainData)) {
+                chainTaskId, plainDatasetFilepath);
+        if (!FileHelper.writeFile(plainDatasetFilepath, plainDatasetContent)) {
             log.error("Failed to write plain dataset file [chainTaskId:{}, path:{}]",
-                    this.chainTaskId, this.plainDatasetFilepath);
-            throw new PreComputeException(PreComputeExitCode.IO_ERROR);
+                    chainTaskId, plainDatasetFilepath);
+            throw new PreComputeException(PreComputeExitCode.WRITING_PLAIN_DATASET_FAILED);
         }
-        log.info("Wrote plain dataset file to disk [chainTaskId:{}]", this.chainTaskId);
+        log.info("Plain dataset file is written to disk [chainTaskId:{}]", chainTaskId);
     }
 }

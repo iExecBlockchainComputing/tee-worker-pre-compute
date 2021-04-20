@@ -32,106 +32,97 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.*;
 
+/**
+ * This is a primary validation test for
+ * pre-compute execution.
+ */
 class PreComputeAppTests {
 
-    private static final String DIR = "src/test/resources/";
-    private static final String ENC_FILE_NAME = "encrypted-data.bin";
-    private static final String ENC_FILE_PATH = DIR + ENC_FILE_NAME;
-    private static final String KEY_FILE = DIR + "key.txt";
-    private static final String PLAIN_FILE = DIR + "plain-data.txt";
+    private static final String CHAIN_TASK_ID = "0xabc";
+    private static final String DATASET_FILENAME = "my-dataset";
+    private static final String DATASET_URL = "https://raw.githubusercontent.com/" +
+            "iExecBlockchainComputing/tee-worker-pre-compute/" +
+            "develop/src/test/resources/encrypted-data.bin";
+    private static final String DATASET_CHECKSUM =
+            "0x02a12ef127dcfbdb294a090c8f0b69a0ca30b7940fc36cabf971f488efd374d7";
+    private static final String RESOURCES = "src/test/resources/";
+    private static final String KEY_FILE = RESOURCES + "key.txt";
+    private static final String PLAIN_DATA_FILE = RESOURCES + "plain-data.txt";
 
     @TempDir
-    File preComputeIn;
-
-    @TempDir
-    File preComputeOut;
+    File outputDir;
 
     @Spy
     PreComputeApp preComputeApp = new PreComputeApp();
 
     @BeforeEach
     void beforeEach() throws Exception {
-        // set env variables
-        String chainTaskId = "chainTaskId";
-        String preComputeInFolder = preComputeIn.getAbsolutePath();
-        String preComputeOutFolder = preComputeOut.getAbsolutePath();
-        String base64DatasetKey = FileHelper.readFile(KEY_FILE);
-        String datasetChecksum = "0x02a12ef127dcfbdb294a090c8f0b69a0ca30b7940fc36cabf971f488efd374d7";
-        String datasetFilename = ENC_FILE_NAME;
-        // copy encrypted file in temp dir (iexec_in)
-        FileHelper.copyFile(ENC_FILE_PATH, preComputeInFolder + "/" + ENC_FILE_NAME);
         // mock System.getenv() calls
         MockitoAnnotations.openMocks(this);
-        doReturn(chainTaskId).when(preComputeApp)
+        doReturn(CHAIN_TASK_ID).when(preComputeApp)
                 .getEnvVarOrThrow(IexecEnvUtils.IEXEC_TASK_ID_ENV_PROPERTY);
-        doReturn(datasetFilename).when(preComputeApp)
-                .getEnvVarOrThrow(IexecEnvUtils.IEXEC_DATASET_FILENAME_ENV_PROPERTY);
-        doReturn(preComputeInFolder).when(preComputeApp)
-                .getEnvVarOrThrow(PreComputeUtils.IEXEC_PRE_COMPUTE_IN_PROPERTY);
-        doReturn(preComputeOutFolder).when(preComputeApp)
-                .getEnvVarOrThrow(PreComputeUtils.IEXEC_PRE_COMPUTE_OUT_PROPERTY);
+        doReturn(outputDir.getAbsolutePath()).when(preComputeApp)
+                .getEnvVarOrThrow(PreComputeUtils.IEXEC_PRE_COMPUTE_OUT);
+        doReturn(DATASET_URL).when(preComputeApp)
+                .getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_URL);
+        String base64DatasetKey = FileHelper.readFile(KEY_FILE);
         doReturn(base64DatasetKey).when(preComputeApp)
-                .getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_KEY_PROPERTY);
-        doReturn(datasetChecksum).when(preComputeApp)
-                .getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_CHECKSUM_PROPERTY);
+                .getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_KEY);
+        doReturn(DATASET_CHECKSUM).when(preComputeApp)
+                .getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_CHECKSUM);
+        doReturn(DATASET_FILENAME).when(preComputeApp)
+                .getEnvVarOrThrow(IexecEnvUtils.IEXEC_DATASET_FILENAME_ENV_PROPERTY);
     }
 
 
     @Test
     void shouldRunSuccessfully() throws Exception {
-        assertDoesNotThrow(() -> preComputeApp.start());
-        String originalFileContent = FileHelper.readFile(PLAIN_FILE);
-        String decryptedFileContent =
-                FileHelper.readFile(preComputeIn.getAbsolutePath() + "/" + ENC_FILE_NAME);
+        assertDoesNotThrow(() -> preComputeApp.run());
+        String decryptedFilepath = outputDir.getAbsolutePath() + "/" + DATASET_FILENAME;
+        String decryptedFileContent = FileHelper.readFile(decryptedFilepath);
+        String originalFileContent = FileHelper.readFile(PLAIN_DATA_FILE);
         assertThat(decryptedFileContent).isEqualTo(originalFileContent);
     }
 
     @Test
-    void shouldThrowAndExitWithEnvVarIsEmpty() throws Exception {
+    void shouldThrowAndExitWhenEnvVarIsEmpty() throws Exception {
         doCallRealMethod().when(preComputeApp)
                 .getEnvVarOrThrow(IexecEnvUtils.IEXEC_TASK_ID_ENV_PROPERTY);
-        runAndCheckExitCode(PreComputeExitCode.EMPTY_REQUIRED_ENV_VAR);
-    }
-
-    @Test
-    void shouldThrowAndExitWithInputFolderNotFound() throws Exception {
-        doReturn("badInPath").when(preComputeApp)
-                .getEnvVarOrThrow(PreComputeUtils.IEXEC_PRE_COMPUTE_IN_PROPERTY);
-        runAndCheckExitCode(PreComputeExitCode.INPUT_FOLDER_NOT_FOUND);
+        runAndCheckErrorCode(PreComputeExitCode.EMPTY_REQUIRED_ENV_VAR);
     }
 
     @Test
     void shouldThrowAndExitWithOutputFolderNotFound() throws Exception {
-        doReturn("badOutPath").when(preComputeApp)
-                .getEnvVarOrThrow(PreComputeUtils.IEXEC_PRE_COMPUTE_OUT_PROPERTY);
-        runAndCheckExitCode(PreComputeExitCode.OUTPUT_FOLDER_NOT_FOUND);
+        doReturn("bad-output-dir-path").when(preComputeApp)
+                .getEnvVarOrThrow(PreComputeUtils.IEXEC_PRE_COMPUTE_OUT);
+        runAndCheckErrorCode(PreComputeExitCode.OUTPUT_FOLDER_NOT_FOUND);
     }
 
     @Test
-    void shouldThrowAndExitWithDatasetFileNotFound() throws Exception {
-        doReturn("badName").when(preComputeApp)
-                .getEnvVarOrThrow(IexecEnvUtils.IEXEC_DATASET_FILENAME_ENV_PROPERTY);
-        runAndCheckExitCode(PreComputeExitCode.DATASET_FILE_NOT_FOUND);
+    void shouldThrowAndExitWithDownloadFailed() throws Exception {
+        doReturn("http://bad-url").when(preComputeApp)
+                .getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_URL);
+        runAndCheckErrorCode(PreComputeExitCode.DATASET_DOWNLOAD_FAILED);
     }
 
     @Test
     void shouldThrowAndExitWithDatasetChecksumNotValid() throws Exception {
         doReturn("badChecksum").when(preComputeApp)
-                .getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_CHECKSUM_PROPERTY);
-        runAndCheckExitCode(PreComputeExitCode.INVALID_DATASET_CHECKSUM);
+                .getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_CHECKSUM);
+        runAndCheckErrorCode(PreComputeExitCode.INVALID_DATASET_CHECKSUM);
     }
 
     @Test
-    void shouldThrowAndExitWithEncryptionError() throws Exception {
+    void shouldThrowAndExitWithDecryptionFailed() throws Exception {
         String badBase64DatasetKey = FileHelper.readFile(KEY_FILE).replace("A", "B");
         doReturn(badBase64DatasetKey).when(preComputeApp)
-                .getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_KEY_PROPERTY);
-        runAndCheckExitCode(PreComputeExitCode.DATASET_DECRYPTION_ERROR);
+                .getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_KEY);
+        runAndCheckErrorCode(PreComputeExitCode.DATASET_DECRYPTION_FAILED);
     }
 
-    private void runAndCheckExitCode(PreComputeExitCode code) {
+    private void runAndCheckErrorCode(PreComputeExitCode code) {
         try {
-            preComputeApp.start();
+            preComputeApp.run();
             assertThat(true).isFalse(); // should fail if reached
         } catch (PreComputeException e) {
             assertThat(e.getExitCode()).isEqualTo(code);
