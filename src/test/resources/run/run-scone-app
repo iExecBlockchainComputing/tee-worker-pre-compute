@@ -10,7 +10,7 @@ echo "Starting CAS & LAS:"
 docker-compose up -d
 sleep 5
 
-MY_SCONE_APP=nexus.iex.ec/tee-worker-pre-compute:dev
+MY_SCONE_APP=docker.io/iexechub/tee-worker-pre-compute:3feff1a-dev
 echo "Starting $MY_SCONE_APP"
 docker run --rm  --network=scone-net --name=my-scone-app --device=/dev/isgx -e SCONE_VERSION=1 -e SCONE_CAS_ADDR="cas" -e SCONE_LAS_ADDR="las" -e SCONE_CONFIG_ID="1/service" $MY_SCONE_APP
 
