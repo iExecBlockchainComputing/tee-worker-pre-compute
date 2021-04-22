@@ -49,19 +49,22 @@ RUN which java
 ARG JAR_PATH
 COPY --from=gradle-builder $JAR_PATH /app/app.jar
 
-FROM registry.scontain.com:5050/sconecuratedimages/iexec-sconify-image:5.3.1 AS cli
+FROM registry.scontain.com:5050/sconecuratedimages/iexec-sconify-image:5.3.2 AS cli
 COPY --from=native /usr/lib/jvm/java-11-openjdk/bin/java /usr/lib/jvm/java-11-openjdk/bin/java
 RUN sconify.sh /usr/lib/jvm/java-11-openjdk/bin/java
 
-FROM registry.scontain.com:5050/sconecuratedimages/iexec-sconify-image:5.3.1 AS crosscompiler
-RUN apk add --no-cache patchelf
+FROM registry.scontain.com:5050/sconecuratedimages/iexec-sconify-image:5.3.2 AS crosscompiler
 COPY --from=native /app /app
+COPY --from=native /etc/hosts /etc/hosts
 COPY --from=native /lib/ /lib/
 COPY --from=native /usr/lib/ /usr/lib/
 COPY --from=native /usr/lib/jvm/java-11-openjdk /usr/lib/jvm/java-11-openjdk
-COPY --from=native /etc/ssl/certs/java/cacerts /etc/ssl/certs/java/cacerts
-RUN SCONE_MODE=sim scone binaryfs / /binary-fs.c \
+COPY --from=native /etc/ssl/certs/java /etc/ssl/certs/java
+RUN set -e; \
+SCONE_MODE=sim scone binaryfs / /binary-fs.c \
+    --include '/etc/resolv.conf' \
     --include '/app/*' \
+    --include '/etc/hosts' \
     --include '/lib/libz.so.1' \
     --include '/lib/libc.musl-x86_64.so.1' \
     --include '/lib/ld-musl-x86_64.so.1' \
@@ -161,22 +164,21 @@ RUN SCONE_MODE=sim scone binaryfs / /binary-fs.c \
     --include '/usr/lib/libxcb-dri2.so.0' \
     --include '/usr/lib/libXrender.so.1.3.0' \
     --include '/usr/lib/jvm/java-11-openjdk/*' \
-    --include '/etc/ssl/certs/java/cacerts/*'
+    --include '/etc/ssl/certs/java/*'
 RUN scone gcc /binary-fs.c -O0 -shared -o /libbinary-fs.so
 
 FROM alpine:3.10
-RUN apk add libgcc
-RUN apk add libstdc++
+RUN apk add libgcc libstdc++ patchelf
 COPY --from=native /lib/ld-musl-x86_64.so.1 /lib/ld-musl-x86_64.so.1
 COPY --from=native /lib/libz.so.1 /lib/libz.so.1
 COPY --from=native /usr/lib/jvm/java-11-openjdk/bin/../lib/jli/libjli.so /usr/lib/jvm/java-11-openjdk/bin/../lib/jli/libjli.so
 COPY --from=cli /usr/lib/jvm/java-11-openjdk/bin/java /usr/lib/jvm/java-11-openjdk/bin/java
 COPY --from=cli /opt/scone/lib /opt/scone/lib
 COPY --from=cli /opt/scone/etc /opt/scone/etc
-COPY --from=crosscompiler /libbinary-fs.so /libbinary-fs.so
-RUN apk add --no-cache patchelf &&     patchelf --add-needed libbinary-fs.so /usr/lib/jvm/java-11-openjdk/bin/java &&     apk del patchelf
-ENV LD_LIBRARY_PATH="/:/lib:/usr/lib/jvm/java-11-openjdk/bin/../lib/jli"
+COPY --from=crosscompiler /libbinary-fs.so /lib/libbinary-fs.so
+RUN patchelf --add-needed libbinary-fs.so /usr/lib/jvm/java-11-openjdk/bin/java
 COPY --from=crosscompiler /usr/local/bin/scone-signer /usr/local/bin/scone-signer
+ENV LD_LIBRARY_PATH="/lib:/lib:/usr/lib/jvm/java-11-openjdk/bin/../lib/jli"
 RUN /usr/local/bin/scone-signer sign  --heap=4G --stack=1M --dlopen=2 /usr/lib/jvm/java-11-openjdk/bin/java
 RUN rm /usr/local/bin/scone-signer
 RUN ln -s /usr/lib/jvm/java-11-openjdk/bin/java /usr/bin/java
