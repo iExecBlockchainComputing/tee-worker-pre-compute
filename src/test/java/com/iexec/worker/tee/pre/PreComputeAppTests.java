@@ -43,7 +43,7 @@ class PreComputeAppTests {
 
     private static final String CHAIN_TASK_ID = "0xabc";
     private static final String DATASET_FILENAME = "my-dataset";
-    private static final String DATASET_URL = REPO_URL + "/encrypted-data.bin";
+    private static final String DATASET_URL = REPO_URL + "encrypted-data.bin";
     private static final String DATASET_CHECKSUM =
             "0x02a12ef127dcfbdb294a090c8f0b69a0ca30b7940fc36cabf971f488efd374d7";
     private static final String RESOURCES = "src/test/resources/";
@@ -135,10 +135,11 @@ class PreComputeAppTests {
         PreComputeArgs preComputeArgs = goodPreComputeArgs();
         String badKey = FileHelper.readFile(KEY_FILE).replace("A", "B");
         preComputeArgs.setEncryptedDatasetBase64Key(badKey);
+        byte[] encryptedData = FileHelper.readFileBytesFromUrl(DATASET_URL);
         doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
         PreComputeException e = assertThrows(
                 PreComputeException.class,
-                () -> preComputeApp.downloadEncryptedDataset());
+                () -> preComputeApp.decryptDataset(encryptedData));
         assertThat(e.getExitCode()).isEqualTo(PreComputeExitCode.DATASET_DECRYPTION_FAILED);
     }
 
@@ -172,6 +173,7 @@ class PreComputeAppTests {
     public void shouldThrowSinceFailedToDownloadInputFiles() {
         PreComputeArgs preComputeArgs = goodPreComputeArgs();
         preComputeArgs.setInputFiles(List.of("http://bad-input-file-url"));
+        doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
         PreComputeException e = assertThrows(PreComputeException.class,
                 () -> preComputeApp.downloadInputFiles());
         assertThat(e.getExitCode()).isEqualTo(PreComputeExitCode.INPUT_FILE_DOWNLOAD_FAILED);
