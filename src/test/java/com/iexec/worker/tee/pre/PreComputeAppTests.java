@@ -50,8 +50,8 @@ class PreComputeAppTests {
     private static final String KEY_FILE = RESOURCES + "key.txt";
     private static final String PLAIN_DATA_FILE = RESOURCES + "plain-data.txt";
 
-    private static final String INPUT_FILE_1_URL = REPO_URL + "input-file1.txt";
-    private static final String INPUT_FILE_2_URL = REPO_URL + "input-file2.txt";
+    private static final String INPUT_FILE_2_URL = REPO_URL + "plain-data.txt";
+    private static final String INPUT_FILE_1_URL = REPO_URL + "key.txt";
 
 
     @TempDir
@@ -166,7 +166,7 @@ class PreComputeAppTests {
         doReturn(goodPreComputeArgs()).when(preComputeApp).getPreComputeArgs();
         preComputeApp.downloadInputFiles();
         assertThat(new File(outputDir, "plain-data.txt")).exists();
-        assertThat(new File(outputDir, "encrypted-data.bin")).exists();
+        assertThat(new File(outputDir, "key.txt")).exists();
     }
 
     @Test
