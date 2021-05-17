@@ -17,9 +17,7 @@
 package com.iexec.worker.tee.pre;
 
 import com.iexec.common.precompute.PreComputeExitCode;
-import com.iexec.common.precompute.PreComputeUtils;
 import com.iexec.common.utils.FileHelper;
-import com.iexec.common.utils.IexecEnvUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -27,10 +25,12 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
 import java.io.File;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.doReturn;
 
 /**
  * This is a primary validation test for
@@ -38,16 +38,21 @@ import static org.mockito.Mockito.*;
  */
 class PreComputeAppTests {
 
+    private static final String REPO_URL = "https://raw.githubusercontent.com/" +
+            "iExecBlockchainComputing/tee-worker-pre-compute/develop/src/test/resources/";
+
     private static final String CHAIN_TASK_ID = "0xabc";
     private static final String DATASET_FILENAME = "my-dataset";
-    private static final String DATASET_URL = "https://raw.githubusercontent.com/" +
-            "iExecBlockchainComputing/tee-worker-pre-compute/" +
-            "develop/src/test/resources/encrypted-data.bin";
+    private static final String DATASET_URL = REPO_URL + "encrypted-data.bin";
     private static final String DATASET_CHECKSUM =
             "0x02a12ef127dcfbdb294a090c8f0b69a0ca30b7940fc36cabf971f488efd374d7";
     private static final String RESOURCES = "src/test/resources/";
     private static final String KEY_FILE = RESOURCES + "key.txt";
     private static final String PLAIN_DATA_FILE = RESOURCES + "plain-data.txt";
+
+    private static final String INPUT_FILE_2_URL = REPO_URL + "plain-data.txt";
+    private static final String INPUT_FILE_1_URL = REPO_URL + "key.txt";
+
 
     @TempDir
     File outputDir;
@@ -57,75 +62,133 @@ class PreComputeAppTests {
 
     @BeforeEach
     void beforeEach() throws Exception {
-        // mock System.getenv() calls
         MockitoAnnotations.openMocks(this);
-        doReturn(CHAIN_TASK_ID).when(preComputeApp)
-                .getEnvVarOrThrow(IexecEnvUtils.IEXEC_TASK_ID_ENV_PROPERTY);
-        doReturn(outputDir.getAbsolutePath()).when(preComputeApp)
-                .getEnvVarOrThrow(PreComputeUtils.IEXEC_PRE_COMPUTE_OUT);
-        doReturn(DATASET_URL).when(preComputeApp)
-                .getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_URL);
-        String base64DatasetKey = FileHelper.readFile(KEY_FILE);
-        doReturn(base64DatasetKey).when(preComputeApp)
-                .getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_KEY);
-        doReturn(DATASET_CHECKSUM).when(preComputeApp)
-                .getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_CHECKSUM);
-        doReturn(DATASET_FILENAME).when(preComputeApp)
-                .getEnvVarOrThrow(IexecEnvUtils.IEXEC_DATASET_FILENAME_ENV_PROPERTY);
     }
 
+    // @Test
+    // void shouldRunSuccessfully() throws Exception {
+    //     assertDoesNotThrow(() -> preComputeApp.run());
+    //     String decryptedFilepath = outputDir.getAbsolutePath() + "/" + DATASET_FILENAME;
+    //     String decryptedFileContent = FileHelper.readFile(decryptedFilepath);
+    //     String originalFileContent = FileHelper.readFile(PLAIN_DATA_FILE);
+    //     assertThat(decryptedFileContent).isEqualTo(originalFileContent);
+    // }
 
     @Test
-    void shouldRunSuccessfully() throws Exception {
-        assertDoesNotThrow(() -> preComputeApp.run());
-        String decryptedFilepath = outputDir.getAbsolutePath() + "/" + DATASET_FILENAME;
-        String decryptedFileContent = FileHelper.readFile(decryptedFilepath);
-        String originalFileContent = FileHelper.readFile(PLAIN_DATA_FILE);
-        assertThat(decryptedFileContent).isEqualTo(originalFileContent);
+    public void shouldFindOutputFolder() {
+        doReturn(goodPreComputeArgs()).when(preComputeApp).getPreComputeArgs();
+        assertDoesNotThrow(() -> preComputeApp.checkOutputFolder());
     }
 
     @Test
-    void shouldThrowAndExitWhenEnvVarIsEmpty() throws Exception {
-        doCallRealMethod().when(preComputeApp)
-                .getEnvVarOrThrow(IexecEnvUtils.IEXEC_TASK_ID_ENV_PROPERTY);
-        runAndCheckErrorCode(PreComputeExitCode.EMPTY_REQUIRED_ENV_VAR);
+    void shouldThrowSinceOutputFolderNotFound() throws Exception {
+        PreComputeArgs preComputeArgs = goodPreComputeArgs();
+        preComputeArgs.setOutputDir("bad-output-dir-path");
+        doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
+        PreComputeException e = assertThrows(
+                PreComputeException.class,
+                () -> preComputeApp.checkOutputFolder());
+        assertThat(e.getExitCode()).isEqualTo(PreComputeExitCode.OUTPUT_FOLDER_NOT_FOUND);
     }
 
     @Test
-    void shouldThrowAndExitWithOutputFolderNotFound() throws Exception {
-        doReturn("bad-output-dir-path").when(preComputeApp)
-                .getEnvVarOrThrow(PreComputeUtils.IEXEC_PRE_COMPUTE_OUT);
-        runAndCheckErrorCode(PreComputeExitCode.OUTPUT_FOLDER_NOT_FOUND);
+    public void shouldDownloadEncryptedDataset() throws Exception {
+        doReturn(goodPreComputeArgs()).when(preComputeApp).getPreComputeArgs();
+        byte[] actualContent = preComputeApp.downloadEncryptedDataset();
+        byte[] expectedContent = FileHelper.readFileBytesFromUrl(DATASET_URL);
+        assertThat(actualContent).isEqualTo(expectedContent);
     }
 
     @Test
-    void shouldThrowAndExitWithDownloadFailed() throws Exception {
-        doReturn("http://bad-url").when(preComputeApp)
-                .getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_URL);
-        runAndCheckErrorCode(PreComputeExitCode.DATASET_DOWNLOAD_FAILED);
+    void shouldThrowSinceDownloadFailed() throws Exception {
+        PreComputeArgs preComputeArgs = goodPreComputeArgs();
+        preComputeArgs.setEncryptedDatasetUrl("http://bad-url");
+        doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
+        PreComputeException e = assertThrows(
+                PreComputeException.class,
+                () -> preComputeApp.downloadEncryptedDataset());
+        assertThat(e.getExitCode()).isEqualTo(PreComputeExitCode.DATASET_DOWNLOAD_FAILED);
     }
 
     @Test
-    void shouldThrowAndExitWithDatasetChecksumNotValid() throws Exception {
-        doReturn("badChecksum").when(preComputeApp)
-                .getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_CHECKSUM);
-        runAndCheckErrorCode(PreComputeExitCode.INVALID_DATASET_CHECKSUM);
+    void shouldThrowSinceDatasetChecksumNotValid() throws Exception {
+        PreComputeArgs preComputeArgs = goodPreComputeArgs();
+        preComputeArgs.setEncryptedDatasetChecksum("badChecksum");
+        doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
+        PreComputeException e = assertThrows(
+                PreComputeException.class,
+                () -> preComputeApp.downloadEncryptedDataset());
+        assertThat(e.getExitCode()).isEqualTo(PreComputeExitCode.INVALID_DATASET_CHECKSUM);
     }
 
     @Test
-    void shouldThrowAndExitWithDecryptionFailed() throws Exception {
-        String badBase64DatasetKey = FileHelper.readFile(KEY_FILE).replace("A", "B");
-        doReturn(badBase64DatasetKey).when(preComputeApp)
-                .getEnvVarOrThrow(PreComputeUtils.IEXEC_DATASET_KEY);
-        runAndCheckErrorCode(PreComputeExitCode.DATASET_DECRYPTION_FAILED);
+    public void shouldDecryptDataset() throws Exception {
+        doReturn(goodPreComputeArgs()).when(preComputeApp).getPreComputeArgs();
+        byte[] encryptedData = FileHelper.readFileBytesFromUrl(DATASET_URL);
+        byte[] expectedPlainData = FileHelper.readAllBytes(PLAIN_DATA_FILE);
+        byte[] actualPlainData = preComputeApp.decryptDataset(encryptedData);
+        assertThat(actualPlainData).isEqualTo(expectedPlainData);
     }
 
-    private void runAndCheckErrorCode(PreComputeExitCode code) {
-        try {
-            preComputeApp.run();
-            assertThat(true).isFalse(); // should fail if reached
-        } catch (PreComputeException e) {
-            assertThat(e.getExitCode()).isEqualTo(code);
-        }
+    @Test
+    void shouldThrowSinceDecryptionFailed() throws Exception {
+        PreComputeArgs preComputeArgs = goodPreComputeArgs();
+        String badKey = FileHelper.readFile(KEY_FILE).replace("A", "B");
+        preComputeArgs.setEncryptedDatasetBase64Key(badKey);
+        byte[] encryptedData = FileHelper.readFileBytesFromUrl(DATASET_URL);
+        doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
+        PreComputeException e = assertThrows(
+                PreComputeException.class,
+                () -> preComputeApp.decryptDataset(encryptedData));
+        assertThat(e.getExitCode()).isEqualTo(PreComputeExitCode.DATASET_DECRYPTION_FAILED);
+    }
+
+    @Test
+    public void shouldSavePlainDatasetFile() throws Exception {
+        doReturn(goodPreComputeArgs()).when(preComputeApp).getPreComputeArgs();
+        byte[] plainContent = FileHelper.readAllBytes(PLAIN_DATA_FILE);
+        preComputeApp.savePlainDatasetFile(plainContent);
+        assertThat(new File(outputDir, DATASET_FILENAME)).exists();
+    }
+
+    @Test
+    public void shouldThrowSinceFailedToSavePlainDataset() {
+        PreComputeArgs preComputeArgs = goodPreComputeArgs();
+        preComputeArgs.setOutputDir("/some-folder-123/not-found");
+        doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
+        PreComputeException e = assertThrows(PreComputeException.class,
+                () -> preComputeApp.savePlainDatasetFile("data".getBytes()));
+        assertThat(e.getExitCode()).isEqualTo(PreComputeExitCode.SAVING_PLAIN_DATASET_FAILED);
+    }
+
+    @Test
+    public void shouldDownloadInputFiles() throws Exception {
+        doReturn(goodPreComputeArgs()).when(preComputeApp).getPreComputeArgs();
+        preComputeApp.downloadInputFiles();
+        assertThat(new File(outputDir, "plain-data.txt")).exists();
+        assertThat(new File(outputDir, "key.txt")).exists();
+    }
+
+    @Test
+    public void shouldThrowSinceFailedToDownloadInputFiles() {
+        PreComputeArgs preComputeArgs = goodPreComputeArgs();
+        preComputeArgs.setInputFiles(List.of("http://bad-input-file-url"));
+        doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
+        PreComputeException e = assertThrows(PreComputeException.class,
+                () -> preComputeApp.downloadInputFiles());
+        assertThat(e.getExitCode()).isEqualTo(PreComputeExitCode.INPUT_FILE_DOWNLOAD_FAILED);
+    }
+
+    private PreComputeArgs goodPreComputeArgs() {
+        return PreComputeArgs.builder()
+                .chainTaskId(CHAIN_TASK_ID)
+                .outputDir(outputDir.getAbsolutePath())
+                .isDatasetRequired(true)
+                .encryptedDatasetUrl(DATASET_URL)
+                .encryptedDatasetBase64Key(FileHelper.readFile(KEY_FILE))
+                .encryptedDatasetChecksum(DATASET_CHECKSUM)
+                .plainDatasetFilename(DATASET_FILENAME)
+                .inputFiles(List.of(INPUT_FILE_1_URL, INPUT_FILE_2_URL))
+                .build();
     }
 }
