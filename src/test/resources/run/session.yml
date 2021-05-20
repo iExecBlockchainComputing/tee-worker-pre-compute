@@ -1,4 +1,4 @@
-name: 'sessionId'
+name: 'currentSession'
 version: '0.3'
 
 # Access control:

@@ -15,7 +15,7 @@ docker run --rm \
         -e SCONE_VERSION=1 \
         -e SCONE_CAS_ADDR="cas" \
         -e SCONE_LAS_ADDR="las" \
-        -e SCONE_CONFIG_ID="sessionId/pre-compute" \
+        -e SCONE_CONFIG_ID="currentSession/pre-compute" \
         -v /tmp/iexec_in:/iexec_in \
         --network=scone-net \
         --device=/dev/isgx \
