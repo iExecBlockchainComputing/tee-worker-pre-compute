@@ -72,7 +72,7 @@ tasks.named('test') {
 }
 
 docker {
-    name 'docker.io/iexechub/' + rootProject.name + ':dev'
+    name 'nexus.iex.ec/' + rootProject.name + ':dev'
     dockerfile file('docker/Dockerfile.local')
     files('build/libs/' + fatJar)
     buildArgs([JAR_PATH: fatJar ])
