@@ -2,3 +2,4 @@
 
 @Library('jenkins-library@master') _
 buildSimpleDocker(imageprivacy: 'public')
+buildTeeDebugDocker(imageprivacy: 'public')
