@@ -1,0 +1,13 @@
+--name=tee-pre-compute \
+--from=${IMG_FROM} \
+--to=${IMG_TO} \
+--binary-fs \
+--fs-dir=/app \
+--host-path=/etc/hosts \
+--host-path=/etc/resolv.conf \
+--binary=/usr/lib/jvm/java-11-openjdk/bin/java \
+--heap="4G" \
+--dlopen="2" \
+--verbose \
+--no-color \
+--command="java -jar /app/app.jar"
