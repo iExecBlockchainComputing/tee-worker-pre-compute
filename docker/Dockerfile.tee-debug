@@ -2,6 +2,10 @@ ARG NATIVE_IMAGE_NAME
 
 FROM $NATIVE_IMAGE_NAME as native
 
+FROM registry.scontain.com:5050/sconecuratedimages/iexec-sconify-image:5.3.3 AS cli
+COPY --from=native /usr/lib/jvm/java-11-openjdk/bin/java /usr/lib/jvm/java-11-openjdk/bin/java
+RUN sconify.sh /usr/lib/jvm/java-11-openjdk/bin/java
+
 FROM registry.scontain.com:5050/sconecuratedimages/iexec-sconify-image:5.3.3 AS crosscompiler
 COPY --from=native /app /app
 COPY --from=native /lib/ /lib/
