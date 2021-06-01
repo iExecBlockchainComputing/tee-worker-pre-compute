@@ -6,7 +6,7 @@ buildSimpleDocker(imageprivacy: 'public')
 node('docker'){
 
     def DOCKER_IMG_BASENAME = 'docker.io/iexechub/tee-worker-pre-compute'
-    def SCONIFY_ARGS_PATH = '5.3.3'
+    def SCONIFY_ARGS_PATH = './docker/sconify.args'
     def SCONIFY_TOOL_IMG_VERSION = '5.3.3'
     def TAG
 
