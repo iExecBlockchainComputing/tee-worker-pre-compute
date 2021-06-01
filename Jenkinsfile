@@ -5,24 +5,40 @@ buildSimpleDocker(imageprivacy: 'public')
 // Build tee debug docker image
 node('docker'){
 
+    def DOCKER_IMG_BASENAME = 'docker.io/iexechub/tee-worker-pre-compute'
+    def SCONIFY_ARGS_PATH = './docker/sconify.args'
+    def SCONIFY_TOOL_IMG_VERSION = '5.3.3'
+    def TAG
+
     stage('Trigger TEE debug image build') {
         GIT_SHORT_COMMIT = sh(script: 'git rev-parse --short HEAD',
                 returnStdout: true).trim()
         GIT_TAG = sh(script: 'git tag --points-at HEAD|tail -n1',
                 returnStdout: true).trim()
-        ARTEFACT_VERSION = 'dev' //no tag match
+        TAG = "$GIT_SHORT_COMMIT" + '-dev' //no tag match
         if ("$GIT_TAG" =~ /^\d{1,}\.\d{1,}\.\d{1,}$/) {
-            ARTEFACT_VERSION = GIT_TAG //tag match
+            TAG = "$GIT_TAG" //tag match
         }
-        def TAG = "$GIT_SHORT_COMMIT" + '-' + "$ARTEFACT_VERSION"
 
         sconeSigning(
-                IMG_FROM: "docker.io/iexechub/tee-worker-pre-compute:$TAG",
-                IMG_TO: "docker.io/iexechub/tee-worker-pre-compute:$TAG-debug",
-                SCRIPT_CONFIG: './docker/sconify.args',
-                SCONE_IMG_VERS: '5.3.3',
+                IMG_FROM: "$DOCKER_IMG_BASENAME:$TAG",
+                IMG_TO: "$DOCKER_IMG_BASENAME:$TAG-debug",
+                SCRIPT_CONFIG: "$SCONIFY_ARGS_PATH",
+                SCONE_IMG_VERS: "$SCONIFY_TOOL_IMG_VERSION",
                 FLAVOR: 'DEBUG'
         )
+    }
+
+    stage('Trigger TEE production image build') {
+        if (env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'main') {
+            sconeSigning(
+                    IMG_FROM: "$DOCKER_IMG_BASENAME:$TAG",
+                    IMG_TO: "$DOCKER_IMG_BASENAME:$TAG-production",
+                    SCRIPT_CONFIG: "$SCONIFY_ARGS_PATH",
+                    SCONE_IMG_VERS: "$SCONIFY_TOOL_IMG_VERSION",
+                    FLAVOR: 'PROD'
+            )
+        }
     }
 
 }
