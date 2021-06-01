@@ -17,14 +17,14 @@ node('docker'){
                 returnStdout: true).trim()
         TAG = "$GIT_SHORT_COMMIT" + '-dev' //no tag match
         if ("$GIT_TAG" =~ /^\d{1,}\.\d{1,}\.\d{1,}$/) {
-            TAG = ${GIT_TAG} //tag match
+            TAG = "$GIT_TAG" //tag match
         }
 
         sconeSigning(
                 IMG_FROM: "$DOCKER_IMG_BASENAME:$TAG",
                 IMG_TO: "$DOCKER_IMG_BASENAME:$TAG-debug",
-                SCRIPT_CONFIG: ${SCONIFY_ARGS_PATH},
-                SCONE_IMG_VERS: ${SCONIFY_TOOL_IMG_VERSION},
+                SCRIPT_CONFIG: "$SCONIFY_ARGS_PATH",
+                SCONE_IMG_VERS: "$SCONIFY_TOOL_IMG_VERSION",
                 FLAVOR: 'DEBUG'
         )
     }
@@ -36,8 +36,8 @@ node('docker'){
         sconeSigning(
                 IMG_FROM: "$DOCKER_IMG_BASENAME:$TAG",
                 IMG_TO: "$DOCKER_IMG_BASENAME:$TAG-production",
-                SCRIPT_CONFIG: ${SCONIFY_ARGS_PATH},
-                SCONE_IMG_VERS: ${SCONIFY_TOOL_IMG_VERSION},
+                SCRIPT_CONFIG: "$SCONIFY_ARGS_PATH",
+                SCONE_IMG_VERS: "$SCONIFY_TOOL_IMG_VERSION",
                 FLAVOR: 'PROD'
         )
     }
