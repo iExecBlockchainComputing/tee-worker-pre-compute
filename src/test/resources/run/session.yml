@@ -1,0 +1,50 @@
+name: 'currentSession'
+version: '0.3'
+
+# Access control:
+#   - only the data owner (CREATOR) can read or update the session
+#   - even the data owner cannot read the session secrets (i.e., the volume key and tag) or delete the session
+
+access_policy:
+  read:
+   - CREATOR
+  update:
+   - CREATOR
+
+services:
+  
+  - name: 'pre-compute'
+    image_name: 'pre-compute-image'
+    mrenclaves: ['a45df00514ba45be07d322afb33d55cb4183adfc4e174098c365491f3af073e2']
+    pwd: '/'
+    command: 'java -jar /app/app.jar'
+    environment:
+      LD_LIBRARY_PATH: '/usr/lib/jvm/java-11-openjdk/lib/server:/usr/lib/jvm/java-11-openjdk/lib:/usr/lib/jvm/java-11-openjdk/../lib'
+      JAVA_TOOL_OPTIONS: '-Xmx256m'
+      IEXEC_TASK_ID: 'taskId'
+      IEXEC_PRE_COMPUTE_OUT: '/iexec_in'
+      
+      IS_DATASET_REQUIRED: 'true'
+      IEXEC_DATASET_KEY: '<TBD>'
+      IEXEC_DATASET_URL: '<TBD>'
+      IEXEC_DATASET_FILENAME: '<TBD>'
+      IEXEC_DATASET_CHECKSUM: '<TBD>'
+      
+      IEXEC_INPUT_FILES_FOLDER: '/iexec_in'
+      IEXEC_INPUT_FILES_NUMBER: '1'
+      IEXEC_INPUT_FILE_URL_1: '<TBD>'
+
+images:
+  
+  - name: pre-compute-image
+    volumes:
+      - name: 'iexec_in'
+        path: '/iexec_in'
+
+volumes:
+  - name: iexec_in
+
+security:
+  attestation:
+    tolerate: [hyperthreading, software-hardening-needed, insecure-igpu, outdated-tcb, debug-mode]
+    ignore_advisories: ["INTEL-SA-00161", "INTEL-SA-00289", "INTEL-SA-00334", "INTEL-SA-00381", "INTEL-SA-00389"]
