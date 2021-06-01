@@ -15,8 +15,8 @@ node('docker'){
                 returnStdout: true).trim()
         GIT_TAG = sh(script: 'git tag --points-at HEAD|tail -n1',
                 returnStdout: true).trim()
-        TAG = ${GIT_SHORT_COMMIT} + '-dev' //no tag match
-        if (${GIT_TAG} =~ /^\d{1,}\.\d{1,}\.\d{1,}$/) {
+        TAG = "$GIT_SHORT_COMMIT" + '-dev' //no tag match
+        if ("$GIT_TAG" =~ /^\d{1,}\.\d{1,}\.\d{1,}$/) {
             TAG = ${GIT_TAG} //tag match
         }
 
