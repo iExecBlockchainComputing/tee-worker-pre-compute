@@ -30,16 +30,15 @@ node('docker'){
     }
 
     stage('Trigger TEE production image build') {
-        when {
-            branch 'master'
+        if (env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'main') {
+            sconeSigning(
+                    IMG_FROM: "$DOCKER_IMG_BASENAME:$TAG",
+                    IMG_TO: "$DOCKER_IMG_BASENAME:$TAG-production",
+                    SCRIPT_CONFIG: "$SCONIFY_ARGS_PATH",
+                    SCONE_IMG_VERS: "$SCONIFY_TOOL_IMG_VERSION",
+                    FLAVOR: 'PROD'
+            )
         }
-        sconeSigning(
-                IMG_FROM: "$DOCKER_IMG_BASENAME:$TAG",
-                IMG_TO: "$DOCKER_IMG_BASENAME:$TAG-production",
-                SCRIPT_CONFIG: "$SCONIFY_ARGS_PATH",
-                SCONE_IMG_VERS: "$SCONIFY_TOOL_IMG_VERSION",
-                FLAVOR: 'PROD'
-        )
     }
 
 }
