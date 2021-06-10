@@ -26,7 +26,7 @@ node('docker') {
     def sconifyToolArgsPath = './docker/sconify.args'
 
     // /!\ UNLOCKED VERSION /!\
-    stage('Build TEE debug unlocked image') {
+    stage('Trigger Unlocked TEE debug image build') {
         sconeSigning(
                 IMG_FROM: "$imageRegistry/$imageName:$imageTag",
                 IMG_TO: "nexus.iex.ec/$imageName-unlocked:$imageTag-debug",
@@ -37,7 +37,7 @@ node('docker') {
         )
     }
 
-    stage('Build TEE debug image') {
+    stage('Trigger TEE debug image build') {
         sconeSigning(
                 IMG_FROM: "$imageRegistry/$imageName:$imageTag",
                 IMG_TO: "$imageRegistry/$imageName:$imageTag-debug",
@@ -48,7 +48,7 @@ node('docker') {
         )
     }
 
-    stage('Build TEE production image') {
+    stage('Trigger TEE production image build') {
         if (env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'main') {
             sconeSigning(
                     IMG_FROM: "$imageRegistry/$imageName:$imageTag",
