@@ -1,46 +1,65 @@
 //Readme @ http://gitlab.iex.ec:30000/iexec/jenkins-library
-@Library('jenkins-library@1.0.0') _
-// Build default docker image
+@Library('jenkins-library@1.0.2') _
+
+// Build native docker image
 buildSimpleDocker(imageprivacy: 'public')
-// Build tee debug docker image
-node('docker'){
 
-    def DOCKER_IMG_BASENAME = 'docker.io/iexechub/tee-worker-pre-compute'
-    def SCONIFY_ARGS_PATH = './docker/sconify.args'
-    def SCONIFY_TOOL_IMG_VERSION = '5.3.3'
-    def TAG
+// Build tee docker images
+node('docker') {
 
-    stage('Trigger TEE debug image build') {
-        GIT_SHORT_COMMIT = sh(script: 'git rev-parse --short HEAD',
-                returnStdout: true).trim()
-        GIT_TAG = sh(script: 'git tag --points-at HEAD|tail -n1',
-                returnStdout: true).trim()
-        TAG = "$GIT_SHORT_COMMIT" + '-dev' //no tag match
-        if ("$GIT_TAG" =~ /^\d{1,}\.\d{1,}\.\d{1,}$/) {
-            TAG = "$GIT_TAG" //tag match
-        }
+    def gitShortCommit = sh(
+            script: 'git rev-parse --short HEAD',
+            returnStdout: true)
+            .trim()
+    def gitTag = sh(
+            script: 'git tag --points-at HEAD|tail -n1',
+            returnStdout: true)
+            .trim()
+    def imageTag = ("$gitTag" =~ /^\d{1,}\.\d{1,}\.\d{1,}$/)
+            ? "$gitTag"
+            : "$gitShortCommit-dev"
 
+    def imageRegistry = 'docker.io'
+    def imageName = 'iexechub/tee-worker-pre-compute'
+    def sconifyToolImageName = 'scone-production/iexec-sconify-image'
+    def sconifyToolImageVersion = '5.3.5'
+    def sconifyToolArgsPath = './docker/sconify.args'
+
+    // /!\ UNLOCKED VERSION /!\
+    stage('Build TEE debug unlocked image') {
         sconeSigning(
-                IMG_FROM: "$DOCKER_IMG_BASENAME:$TAG",
-                IMG_TO: "$DOCKER_IMG_BASENAME:$TAG-debug",
-                SCRIPT_CONFIG: "$SCONIFY_ARGS_PATH",
-                SCONE_IMG_VERS: "$SCONIFY_TOOL_IMG_VERSION",
+                IMG_FROM: "$imageRegistry/$imageName:$imageTag",
+                IMG_TO: "nexus.iex.ec/$imageName-unlocked:$imageTag-debug",
+                SCRIPT_CONFIG: "$sconifyToolArgsPath",
+                SCONE_IMG_NAME: 'sconecuratedimages/iexec-sconify-image'
+                SCONE_IMG_VERS: '5.3.3',
                 FLAVOR: 'DEBUG'
         )
     }
 
-    stage('Trigger TEE production image build') {
+    stage('Build TEE debug image') {
+        sconeSigning(
+                IMG_FROM: "$imageRegistry/$imageName:$imageTag",
+                IMG_TO: "$imageRegistry/$imageName:$imageTag-debug",
+                SCRIPT_CONFIG: "$sconifyToolArgsPath",
+                SCONE_IMG_NAME: "$sconifyToolImageName"
+                SCONE_IMG_VERS: "$sconifyToolImageVersion",
+                FLAVOR: 'DEBUG'
+        )
+    }
+
+    stage('Build TEE production image') {
         if (env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'main') {
             sconeSigning(
-                    IMG_FROM: "$DOCKER_IMG_BASENAME:$TAG",
-                    IMG_TO: "$DOCKER_IMG_BASENAME:$TAG-production",
-                    SCRIPT_CONFIG: "$SCONIFY_ARGS_PATH",
-                    SCONE_IMG_VERS: "$SCONIFY_TOOL_IMG_VERSION",
+                    IMG_FROM: "$imageRegistry/$imageName:$imageTag",
+                    IMG_TO: "$imageRegistry/$imageName:$imageTag-production",
+                    SCRIPT_CONFIG: "$sconifyToolArgsPath",
+                    SCONE_IMG_NAME: "$sconifyToolImageName"
+                    SCONE_IMG_VERS: "$sconifyToolImageVersion",
                     FLAVOR: 'PROD'
             )
         }
     }
-
 }
 
 
