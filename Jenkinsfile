@@ -31,7 +31,7 @@ node('docker') {
                 IMG_FROM: "$imageRegistry/$imageName:$imageTag",
                 IMG_TO: "nexus.iex.ec/$imageName-unlocked:$imageTag-debug",
                 SCRIPT_CONFIG: "$sconifyToolArgsPath",
-                SCONE_IMG_NAME: 'sconecuratedimages/iexec-sconify-image'
+                SCONE_IMG_NAME: 'sconecuratedimages/iexec-sconify-image',
                 SCONE_IMG_VERS: '5.3.3',
                 FLAVOR: 'DEBUG'
         )
@@ -42,7 +42,7 @@ node('docker') {
                 IMG_FROM: "$imageRegistry/$imageName:$imageTag",
                 IMG_TO: "$imageRegistry/$imageName:$imageTag-debug",
                 SCRIPT_CONFIG: "$sconifyToolArgsPath",
-                SCONE_IMG_NAME: "$sconifyToolImageName"
+                SCONE_IMG_NAME: "$sconifyToolImageName",
                 SCONE_IMG_VERS: "$sconifyToolImageVersion",
                 FLAVOR: 'DEBUG'
         )
@@ -54,7 +54,7 @@ node('docker') {
                     IMG_FROM: "$imageRegistry/$imageName:$imageTag",
                     IMG_TO: "$imageRegistry/$imageName:$imageTag-production",
                     SCRIPT_CONFIG: "$sconifyToolArgsPath",
-                    SCONE_IMG_NAME: "$sconifyToolImageName"
+                    SCONE_IMG_NAME: "$sconifyToolImageName",
                     SCONE_IMG_VERS: "$sconifyToolImageVersion",
                     FLAVOR: 'PROD'
             )
