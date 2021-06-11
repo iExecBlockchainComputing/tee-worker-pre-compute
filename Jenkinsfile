@@ -56,7 +56,7 @@ node('docker') {
     }
 
     stage('Trigger TEE production image build') {
-        if (env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'main') {
+        // if (env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'main') {
             sconeSigning(
                     IMG_FROM: "$nativeImage",
                     IMG_TO: "$productionImage",
@@ -65,6 +65,6 @@ node('docker') {
                     SCONE_IMG_VERS: "$sconifyToolImageVersion",
                     FLAVOR: 'PROD'
             )
-        }
+        // }
     }
 }
