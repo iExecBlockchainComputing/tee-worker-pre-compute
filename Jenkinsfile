@@ -1,30 +1,56 @@
-//Readme @ http://gitlab.iex.ec:30000/iexec/jenkins-library
-@Library('jenkins-library@1.0.0') _
-// Build default docker image
-buildSimpleDocker(imageprivacy: 'public')
-// Build tee debug docker image
-node('docker'){
+// Readme @ http://gitlab.iex.ec:30000/iexec/jenkins-library
 
-    def DOCKER_IMG_BASENAME = 'docker.io/iexechub/tee-worker-pre-compute'
-    def SCONIFY_ARGS_PATH = './docker/sconify.args'
-    def SCONIFY_TOOL_IMG_VERSION = '5.3.3'
-    def TAG
+@Library('jenkins-library@1.0.2') _
+
+// Build native docker image
+buildSimpleDocker(imageprivacy: 'public')
+
+// Build tee docker images
+node('docker') {
+
+    def sconifyToolImageName = 'scone-production/iexec-sconify-image'
+    def sconifyToolImageVersion = '5.3.5'
+    def sconifyToolArgsPath = './docker/sconify.args'
+
+    def gitShortCommit = sh(
+            script: 'git rev-parse --short HEAD',
+            returnStdout: true)
+            .trim()
+    def gitTag = sh(
+            script: 'git tag --points-at HEAD|tail -n1',
+            returnStdout: true)
+            .trim()
+    def imageTag = ("$gitTag" =~ /^\d{1,}\.\d{1,}\.\d{1,}$/)
+            ? "$gitTag"
+            : "$gitShortCommit-dev"
+
+    def imageRegistry = 'docker.io/iexechub'
+    def imageName = 'tee-worker-pre-compute'
+    def nativeImage = "$imageRegistry/$imageName:$imageTag"
+    def unlockedImage = "nexus.iex.ec/$imageName-unlocked:$imageTag-debug";
+    def debugImage = "$imageRegistry/$imageName:$imageTag-debug"
+    def productionImage = "$imageRegistry/$imageName:$imageTag-production";
+
+
+    // /!\ UNLOCKED VERSION /!\
+    stage('Trigger "unlocked" TEE debug image build') {
+        sconeSigning(
+                IMG_FROM: "$nativeImage",
+                IMG_TO: "$unlockedImage",
+                SCRIPT_CONFIG: "$sconifyToolArgsPath",
+                SCONE_IMG_NAME: 'sconecuratedimages/iexec-sconify-image',
+                SCONE_IMG_VERS: '5.3.3',
+                FLAVOR: 'DEBUG'
+        )
+    }
 
     stage('Trigger TEE debug image build') {
-        GIT_SHORT_COMMIT = sh(script: 'git rev-parse --short HEAD',
-                returnStdout: true).trim()
-        GIT_TAG = sh(script: 'git tag --points-at HEAD|tail -n1',
-                returnStdout: true).trim()
-        TAG = "$GIT_SHORT_COMMIT" + '-dev' //no tag match
-        if ("$GIT_TAG" =~ /^\d{1,}\.\d{1,}\.\d{1,}$/) {
-            TAG = "$GIT_TAG" //tag match
-        }
-
         sconeSigning(
-                IMG_FROM: "$DOCKER_IMG_BASENAME:$TAG",
-                IMG_TO: "$DOCKER_IMG_BASENAME:$TAG-debug",
-                SCRIPT_CONFIG: "$SCONIFY_ARGS_PATH",
-                SCONE_IMG_VERS: "$SCONIFY_TOOL_IMG_VERSION",
+                IMG_FROM: "$nativeImage",
+                IMG_TO: "$debugImage",
+                SCRIPT_CONFIG: "$sconifyToolArgsPath",
+                SCONE_IMG_NAME: "$sconifyToolImageName",
+                SCONE_IMG_VERS: "$sconifyToolImageVersion",
                 FLAVOR: 'DEBUG'
         )
     }
@@ -32,15 +58,13 @@ node('docker'){
     stage('Trigger TEE production image build') {
         if (env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'main') {
             sconeSigning(
-                    IMG_FROM: "$DOCKER_IMG_BASENAME:$TAG",
-                    IMG_TO: "$DOCKER_IMG_BASENAME:$TAG-production",
-                    SCRIPT_CONFIG: "$SCONIFY_ARGS_PATH",
-                    SCONE_IMG_VERS: "$SCONIFY_TOOL_IMG_VERSION",
+                    IMG_FROM: "$nativeImage",
+                    IMG_TO: "$productionImage",
+                    SCRIPT_CONFIG: "$sconifyToolArgsPath",
+                    SCONE_IMG_NAME: "$sconifyToolImageName",
+                    SCONE_IMG_VERS: "$sconifyToolImageVersion",
                     FLAVOR: 'PROD'
             )
         }
     }
-
 }
-
-
