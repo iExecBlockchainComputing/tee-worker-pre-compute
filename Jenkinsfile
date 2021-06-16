@@ -9,7 +9,7 @@ buildSimpleDocker(imageprivacy: 'public')
 node('docker') {
 
     def sconifyToolImageName = 'scone-production/iexec-sconify-image'
-    def sconifyToolImageVersion = '5.3.5'
+    def sconifyToolImageVersion = '5.3.6'
     def sconifyToolArgsPath = './docker/sconify.args'
 
     def gitShortCommit = sh(
