@@ -36,10 +36,11 @@ public class PreComputeApp {
      * If the decrypted file is an archive, it won't be extracted.
      * 
      * @throws PreComputeException
+     * @param chainTaskId
      */
-    void run() throws PreComputeException {
-        preComputeArgs = PreComputeArgs.readArgs();
-        chainTaskId = preComputeArgs.getChainTaskId();
+    void run(String chainTaskId) throws PreComputeException {
+        this.chainTaskId = chainTaskId;
+        preComputeArgs = PreComputeArgs.readArgs(chainTaskId);
         checkOutputFolder();
         if (preComputeArgs.isDatasetRequired()) {
             byte[] encryptedContent = downloadEncryptedDataset();

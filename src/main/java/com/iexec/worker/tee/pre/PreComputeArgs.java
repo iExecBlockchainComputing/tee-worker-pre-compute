@@ -17,10 +17,12 @@
 package com.iexec.worker.tee.pre;
 
 import com.iexec.common.precompute.PreComputeExitCode;
+import com.iexec.common.replicate.ReplicateStatusCause;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,9 +48,9 @@ public class PreComputeArgs {
     // input files
     private List<String> inputFiles;
 
-    public static PreComputeArgs readArgs() throws PreComputeException {
+    public static PreComputeArgs readArgs(String chainTaskId) throws PreComputeException {
         PreComputeArgs args = PreComputeArgs.builder()
-                .chainTaskId(getEnvVarOrThrow(IEXEC_TASK_ID))
+                .chainTaskId(chainTaskId)
                 .outputDir(getEnvVarOrThrow(IEXEC_PRE_COMPUTE_OUT))
                 .isDatasetRequired(Boolean.valueOf(getEnvVarOrThrow(IS_DATASET_REQUIRED)))
                 .inputFiles(new ArrayList<>())
@@ -72,6 +74,15 @@ public class PreComputeArgs {
         if (envVar == null || envVar.isEmpty()) {
             log.error("Required env var is empty [name:{}]", envVarName);
             throw new PreComputeException(PreComputeExitCode.EMPTY_REQUIRED_ENV_VAR);
+        }
+        return envVar;
+    }
+
+    public static String getEnvVar(String envVarName) {
+        String envVar = System.getenv(envVarName);
+        if (StringUtils.isEmpty(envVar)) {
+            log.error("Required env var is empty [name:{}]", envVarName);
+            return "";
         }
         return envVar;
     }
