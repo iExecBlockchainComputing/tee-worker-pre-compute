@@ -37,8 +37,8 @@ public class PreComputeAppRunner {
      * Run PreComputeApp and handle possible exceptions.
      * Exits:
      * - 0: Success
-     * - 1: Failure; Reported known cause
-     * - 2: Failure; Reported unknown cause
+     * - 1: Failure; Reported cause (known or unknown)
+     * - 2: Failure; Unreported cause since reporting issue
      * - 3: Failure; Unreported cause since missing taskID context
      */
     public static void start() {
@@ -52,6 +52,7 @@ public class PreComputeAppRunner {
         try {
             new PreComputeApp().run(chainTaskId);
             log.info("TEE pre-compute completed");
+            System.exit(0);
         } catch (PreComputeException e) {
             cause = ReplicateStatusCause.UNKNOWN;//TODO update to e.getCause()
             log.error("TEE pre-compute failed with a known cause " +
@@ -65,9 +66,7 @@ public class PreComputeAppRunner {
             System.exit(1);
         } catch (FeignException e) {
             log.error("Failed to report exit cause [cause:{}]", cause, e);
-            System.exit(2);
         }
-        System.exit(0);
-
+        System.exit(2);
     }
 }
