@@ -16,7 +16,7 @@
 
 package com.iexec.worker.tee.pre;
 
-import com.iexec.common.precompute.PreComputeExitCode;
+import com.iexec.common.replicate.ReplicateStatusCause;
 import com.iexec.common.utils.FileHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -88,7 +88,7 @@ class PreComputeAppTests {
         PreComputeException e = assertThrows(
                 PreComputeException.class,
                 () -> preComputeApp.checkOutputFolder());
-        assertThat(e.getExitCode()).isEqualTo(PreComputeExitCode.OUTPUT_FOLDER_NOT_FOUND);
+        assertThat(e.getExitCause()).isEqualTo(ReplicateStatusCause.PRE_COMPUTE_OUTPUT_FOLDER_NOT_FOUND);
     }
 
     @Test
@@ -107,7 +107,7 @@ class PreComputeAppTests {
         PreComputeException e = assertThrows(
                 PreComputeException.class,
                 () -> preComputeApp.downloadEncryptedDataset());
-        assertThat(e.getExitCode()).isEqualTo(PreComputeExitCode.DATASET_DOWNLOAD_FAILED);
+        assertThat(e.getExitCause()).isEqualTo(ReplicateStatusCause.PRE_COMPUTE_DATASET_DOWNLOAD_FAILED);
     }
 
     @Test
@@ -118,7 +118,7 @@ class PreComputeAppTests {
         PreComputeException e = assertThrows(
                 PreComputeException.class,
                 () -> preComputeApp.downloadEncryptedDataset());
-        assertThat(e.getExitCode()).isEqualTo(PreComputeExitCode.INVALID_DATASET_CHECKSUM);
+        assertThat(e.getExitCause()).isEqualTo(ReplicateStatusCause.PRE_COMPUTE_INVALID_DATASET_CHECKSUM);
     }
 
     @Test
@@ -140,7 +140,7 @@ class PreComputeAppTests {
         PreComputeException e = assertThrows(
                 PreComputeException.class,
                 () -> preComputeApp.decryptDataset(encryptedData));
-        assertThat(e.getExitCode()).isEqualTo(PreComputeExitCode.DATASET_DECRYPTION_FAILED);
+        assertThat(e.getExitCause()).isEqualTo(ReplicateStatusCause.PRE_COMPUTE_DATASET_DECRYPTION_FAILED);
     }
 
     @Test
@@ -158,7 +158,7 @@ class PreComputeAppTests {
         doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
         PreComputeException e = assertThrows(PreComputeException.class,
                 () -> preComputeApp.savePlainDatasetFile("data".getBytes()));
-        assertThat(e.getExitCode()).isEqualTo(PreComputeExitCode.SAVING_PLAIN_DATASET_FAILED);
+        assertThat(e.getExitCause()).isEqualTo(ReplicateStatusCause.PRE_COMPUTE_SAVING_PLAIN_DATASET_FAILED);
     }
 
     @Test
@@ -176,7 +176,7 @@ class PreComputeAppTests {
         doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
         PreComputeException e = assertThrows(PreComputeException.class,
                 () -> preComputeApp.downloadInputFiles());
-        assertThat(e.getExitCode()).isEqualTo(PreComputeExitCode.INPUT_FILE_DOWNLOAD_FAILED);
+        assertThat(e.getExitCause()).isEqualTo(ReplicateStatusCause.PRE_COMPUTE_INPUT_FILE_DOWNLOAD_FAILED);
     }
 
     private PreComputeArgs goodPreComputeArgs() {
@@ -191,4 +191,5 @@ class PreComputeAppTests {
                 .inputFiles(List.of(INPUT_FILE_1_URL, INPUT_FILE_2_URL))
                 .build();
     }
+
 }

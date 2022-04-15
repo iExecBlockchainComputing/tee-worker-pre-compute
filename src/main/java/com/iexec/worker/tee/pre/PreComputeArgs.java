@@ -16,7 +16,7 @@
 
 package com.iexec.worker.tee.pre;
 
-import com.iexec.common.precompute.PreComputeExitCode;
+import com.iexec.common.replicate.ReplicateStatusCause;
 import com.iexec.common.replicate.ReplicateStatusCause;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -73,7 +73,7 @@ public class PreComputeArgs {
         String envVar = System.getenv(envVarName);
         if (envVar == null || envVar.isEmpty()) {
             log.error("Required env var is empty [name:{}]", envVarName);
-            throw new PreComputeException(PreComputeExitCode.EMPTY_REQUIRED_ENV_VAR);
+            throw new PreComputeException(ReplicateStatusCause.PRE_COMPUTE_EMPTY_REQUIRED_ENV_VAR);
         }
         return envVar;
     }

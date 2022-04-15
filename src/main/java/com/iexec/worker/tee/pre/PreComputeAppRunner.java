@@ -17,8 +17,11 @@
 package com.iexec.worker.tee.pre;
 
 import com.iexec.common.replicate.ReplicateStatusCause;
-import com.iexec.common.worker.api.WorkerApiClientBuilder;
+import com.iexec.common.utils.FeignBuilder;
+import com.iexec.common.worker.api.ExitMessage;
+import com.iexec.worker.tee.pre.worker.WorkerApiClient;
 import feign.FeignException;
+import feign.Logger;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.iexec.common.utils.IexecEnvUtils.IEXEC_TASK_ID;
@@ -43,7 +46,7 @@ public class PreComputeAppRunner {
      */
     public static void start() {
         log.info("TEE pre-compute started");
-        ReplicateStatusCause cause = ReplicateStatusCause.PRE_COMPUTE_FAILED;
+        ReplicateStatusCause exitCause = ReplicateStatusCause.PRE_COMPUTE_UNKNOWN_FAILED;
         String chainTaskId = getEnvVar(IEXEC_TASK_ID);
         if (chainTaskId.isEmpty()) {
             log.error("TEE pre-compute cannot go further without taskID context");
@@ -54,19 +57,23 @@ public class PreComputeAppRunner {
             log.info("TEE pre-compute completed");
             System.exit(0);
         } catch (PreComputeException e) {
-            cause = ReplicateStatusCause.UNKNOWN;//TODO update to e.getCause()
-            log.error("TEE pre-compute failed with a known cause " +
-                    "[cause:{}]", cause, e);
+            exitCause = e.getExitCause();
+            log.error("TEE pre-compute failed with a known exitCause " +
+                    "[exitCause:{}]", exitCause, e);
         } catch (Exception e) {
-            log.error("TEE pre-compute failed without explicit cause", e);
+            log.error("TEE pre-compute failed without explicit exitCause", e);
         }
         try {
-            WorkerApiClientBuilder.getInstance(WORKER_HOST)
-                    .sendExitCauseForPreComputeStage(chainTaskId, cause);
+            FeignBuilder
+                    .createBuilder(Logger.Level.FULL)
+                    .target(WorkerApiClient.class, "http://" + WORKER_HOST)
+                    .sendExitCauseForPreComputeStage(chainTaskId,
+                            new ExitMessage(exitCause));
             System.exit(1);
         } catch (FeignException e) {
-            log.error("Failed to report exit cause [cause:{}]", cause, e);
+            log.error("Failed to report exit exitCause [exitCause:{}]", exitCause, e);
         }
         System.exit(2);
     }
+
 }

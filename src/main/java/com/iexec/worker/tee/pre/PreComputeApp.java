@@ -16,7 +16,7 @@
 
 package com.iexec.worker.tee.pre;
 
-import com.iexec.common.precompute.PreComputeExitCode;
+import com.iexec.common.replicate.ReplicateStatusCause;
 import com.iexec.common.security.CipherUtils;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.common.utils.HashUtils;
@@ -64,7 +64,7 @@ public class PreComputeApp {
         }
         log.error("Output folder not found [chainTaskId:{}, path:{}]",
                 chainTaskId, outputDir);
-        throw new PreComputeException(PreComputeExitCode.OUTPUT_FOLDER_NOT_FOUND);
+        throw new PreComputeException(ReplicateStatusCause.PRE_COMPUTE_OUTPUT_FOLDER_NOT_FOUND);
     }
 
     /**
@@ -82,7 +82,7 @@ public class PreComputeApp {
         if (encryptedContent == null) {
             log.error("Failed to download encrypted dataset file [chainTaskId:{}, url:{}]",
                     chainTaskId, encryptedDatasetUrl);
-            throw new PreComputeException(PreComputeExitCode.DATASET_DOWNLOAD_FAILED);
+            throw new PreComputeException(ReplicateStatusCause.PRE_COMPUTE_DATASET_DOWNLOAD_FAILED);
         }
         log.info("Checking encrypted dataset checksum [chainTaskId:{}]", chainTaskId);
         String expectedChecksum = getPreComputeArgs().getEncryptedDatasetChecksum();
@@ -90,7 +90,7 @@ public class PreComputeApp {
         if (!actualChecksum.equals(expectedChecksum)) {
             log.info("Invalid dataset checksum [chainTaskId:{}, expected:{}, actual:{}]",
                     chainTaskId, expectedChecksum, actualChecksum);
-            throw new PreComputeException(PreComputeExitCode.INVALID_DATASET_CHECKSUM);
+            throw new PreComputeException(ReplicateStatusCause.PRE_COMPUTE_INVALID_DATASET_CHECKSUM);
         }
         return encryptedContent;
     }
@@ -111,7 +111,7 @@ public class PreComputeApp {
             return plainDatasetContent;
         } catch (GeneralSecurityException e) {
             log.error("Failed to decrypt dataset [chainTaskId:{}]", chainTaskId, e);
-            throw new PreComputeException(PreComputeExitCode.DATASET_DECRYPTION_FAILED);
+            throw new PreComputeException(ReplicateStatusCause.PRE_COMPUTE_DATASET_DECRYPTION_FAILED);
         }
     }
 
@@ -131,7 +131,7 @@ public class PreComputeApp {
         if (!FileHelper.writeFile(plainDatasetFilepath, plainContent)) {
             log.error("Failed to write plain dataset file [chainTaskId:{}, path:{}]",
                     chainTaskId, plainDatasetFilepath);
-            throw new PreComputeException(PreComputeExitCode.SAVING_PLAIN_DATASET_FAILED);
+            throw new PreComputeException(ReplicateStatusCause.PRE_COMPUTE_SAVING_PLAIN_DATASET_FAILED);
         }
         log.info("Saved plain dataset file to disk [chainTaskId:{}]", chainTaskId);
     }
@@ -147,7 +147,7 @@ public class PreComputeApp {
         for (String url : getPreComputeArgs().getInputFiles()) {
             log.info("Downloading input file [chainTaskId:{}, url:{}]", chainTaskId, url);
             if (FileHelper.downloadFile(url, getPreComputeArgs().getOutputDir()).isEmpty()) {
-                throw new PreComputeException(PreComputeExitCode.INPUT_FILE_DOWNLOAD_FAILED);
+                throw new PreComputeException(ReplicateStatusCause.PRE_COMPUTE_INPUT_FILE_DOWNLOAD_FAILED);
             }
         }
     }
