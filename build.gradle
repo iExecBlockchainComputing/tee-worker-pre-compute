@@ -16,9 +16,12 @@ plugins {
 
 ext {
     gitBranch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
+    ociImageBase = 'nexus.iex.ec/' + rootProject.name
+    ociImageName = ociImageBase + ':dev'
+    ociTeeImageName = ociImageBase + '-unlocked:dev'
 }
 
-if (gitBranch != 'main' && gitBranch != 'master' && ! (gitBranch ==~ '(release|hotfix|support)/.*')) {
+if (gitBranch != 'main' && gitBranch != 'master' && !(gitBranch ==~ '(release|hotfix|support)/.*')) {
     version += '-NEXT-SNAPSHOT'
 }
 
@@ -80,13 +83,20 @@ tasks.named('test') {
 }
 
 docker {
-    name 'nexus.iex.ec/' + rootProject.name + ':dev'
+    name ociImageName
     dockerfile file('docker/Dockerfile.local')
     files('build/libs/' + fatJar)
-    buildArgs([JAR_PATH: fatJar ])
+    buildArgs([JAR_PATH: fatJar])
 }
 tasks.docker.dependsOn tasks.build
 
 task buildImage {
     dependsOn tasks.docker
+}
+
+task buildTeeImage(type: Exec) {
+    dependsOn buildImage
+    commandLine("sh", "-c", "IMG_FROM=$ociImageName IMG_TO=$ociTeeImageName " +
+            "./docker/sconify.sh " +
+            "&& docker run -e SCONE_HASH=1 $ociTeeImageName")
 }
