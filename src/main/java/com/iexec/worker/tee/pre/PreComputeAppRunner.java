@@ -40,8 +40,8 @@ public class PreComputeAppRunner {
      * Exits:
      * - 0: Success
      * - 1: Failure; Reported cause (known or unknown)
-     * - 2: Failure; Unreported cause since reporting issue
-     * - 3: Failure; Unreported cause since missing taskID context
+     * - 2: Failure; Unreported cause (report issue)
+     * - 3: Failure; Unreported cause (task context missing)
      */
     public static void start() {
         log.info("TEE pre-compute started");
