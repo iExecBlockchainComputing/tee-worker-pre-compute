@@ -25,7 +25,6 @@ import feign.Logger;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.iexec.common.utils.IexecEnvUtils.IEXEC_TASK_ID;
-import static com.iexec.worker.tee.pre.PreComputeArgs.getEnvVar;
 
 @Slf4j
 public class PreComputeAppRunner {
@@ -46,10 +45,12 @@ public class PreComputeAppRunner {
      */
     public static void start() {
         log.info("TEE pre-compute started");
-        ReplicateStatusCause exitCause = ReplicateStatusCause.PRE_COMPUTE_UNKNOWN_FAILED;
-        String chainTaskId = getEnvVar(IEXEC_TASK_ID);
-        if (chainTaskId.isEmpty()) {
-            log.error("TEE pre-compute cannot go further without taskID context");
+        ReplicateStatusCause exitCause = ReplicateStatusCause.PRE_COMPUTE_FAILED_UNKNOWN_ISSUE;
+        String chainTaskId = "";
+        try {
+            chainTaskId = PreComputeArgs.getEnvVarOrThrow(IEXEC_TASK_ID);
+        } catch (PreComputeException e) {
+            log.error("TEE pre-compute cannot go further without taskID context", e);
             System.exit(3);
         }
         try {
