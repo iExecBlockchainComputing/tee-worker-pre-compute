@@ -26,11 +26,7 @@ public class PreComputeException extends Exception {
     private final ReplicateStatusCause exitCause;
 
     public PreComputeException(ReplicateStatusCause exitCause) {
-        this(exitCause, null);
-    }
-
-    public PreComputeException(ReplicateStatusCause exitCause, String message) {
-        super(message);
         this.exitCause = exitCause;
     }
+
 }
