@@ -1,4 +1,4 @@
-@Library('global-jenkins-library@feature/standalone-scone-build') _
+@Library('global-jenkins-library@1.9.0') _
 
 buildInfo = getBuildInfo()
 
