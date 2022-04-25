@@ -7,7 +7,7 @@ def nativeImage = buildSimpleDocker_v2(
   dockerfileDir:             './docker',
   buildContext:              '.',
   dockerImageRepositoryName: 'tee-worker-pre-compute',
-  imageprivacy:              'private'
+  imageprivacy:              'public'
 )
 
 sconeBuildUnlocked(
