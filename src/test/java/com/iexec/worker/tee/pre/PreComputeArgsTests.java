@@ -19,6 +19,7 @@ package com.iexec.worker.tee.pre;
 import com.iexec.common.replicate.ReplicateStatusCause;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -49,6 +50,11 @@ class PreComputeArgsTests {
     @MethodSource("buildReplicateCauseIfMissing")
     void shouldBuildReplicateCauseIfMissing(Map.Entry<String, ReplicateStatusCause> entry) {
         Assertions.assertEquals(entry.getValue(), PreComputeArgs.buildReplicateCauseIfMissing(entry.getKey()));
+    }
+
+    @Test
+    void shouldNotBuildReplicateCauseIfMissingSinceUnknown() {
+        Assertions.assertNull(PreComputeArgs.buildReplicateCauseIfMissing("SOME_ENV_VAR"));
     }
 
 }

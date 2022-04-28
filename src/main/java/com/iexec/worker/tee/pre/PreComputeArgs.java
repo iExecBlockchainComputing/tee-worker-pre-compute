@@ -95,7 +95,7 @@ public class PreComputeArgs {
         if (envVarNameMissingToCause.containsKey(envVarName)) {
             return envVarNameMissingToCause.get(envVarName);
         }
-        if (envVarName.contains(IEXEC_INPUT_FILE_URL_PREFIX)) {
+        if (envVarName.startsWith(IEXEC_INPUT_FILE_URL_PREFIX)) {
             return ReplicateStatusCause.PRE_COMPUTE_AT_LEAST_ONE_INPUT_FILE_URL_MISSING;
         }
         return null;
