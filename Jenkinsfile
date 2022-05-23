@@ -16,7 +16,7 @@ buildJavaProject(
         productionVisibility: 'docker.io')
 
 sconeBuildUnlocked(
-        nativeImage:     "nexus.iex.ec/$repositoryName:$buildInfo.imageTag",
+        nativeImage:     "docker-regis.iex.ec/$repositoryName:$buildInfo.imageTag",
         imageName:       repositoryName,
         imageTag:        buildInfo.imageTag,
         sconifyArgsPath: './docker/sconify.args'
