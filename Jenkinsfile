@@ -1,18 +1,23 @@
 @Library('global-jenkins-library@1.9.0') _
 
+String repositoryName = 'tee-worker-pre-compute'
+
 buildInfo = getBuildInfo()
 
-def nativeImage = buildSimpleDocker_v2(
-  buildInfo:                 buildInfo,
-  dockerfileDir:             './docker',
-  buildContext:              '.',
-  dockerImageRepositoryName: 'tee-worker-pre-compute',
-  imageprivacy:              'public'
-)
+buildJavaProject(
+        buildInfo: buildInfo,
+        integrationTestsEnvVars: [],
+        shouldPublishJars: false,
+        shouldPublishDockerImages: true,
+        dockerfileDir: 'docker',
+        buildContext: '.',
+        dockerImageRepositoryName: repositoryName,
+        preProductionVisibility: 'docker.io',
+        productionVisibility: 'docker.io')
 
 sconeBuildUnlocked(
-  nativeImage:     nativeImage,
-  imageName:       'tee-worker-pre-compute',
-  imageTag:        buildInfo.imageTag,
-  sconifyArgsPath: './docker/sconify.args'
+        nativeImage:     "nexus.iex.ec/$repositoryName:$buildInfo.shortCommit",
+        imageName:       repositoryName,
+        imageTag:        buildInfo.imageTag,
+        sconifyArgsPath: './docker/sconify.args'
 )

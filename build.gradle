@@ -9,6 +9,8 @@
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     id 'application'
+    id 'jacoco'
+    id 'org.sonarqube' version '3.3'
     id 'com.palantir.docker' version '0.26.0'
     id 'com.github.johnrengelman.shadow' version '6.1.0'
     id 'io.freefair.lombok' version '5.3.0'
@@ -19,6 +21,7 @@ ext {
     ociImageBase = 'nexus.iex.ec/' + rootProject.name
     ociImageName = ociImageBase + ':dev'
     ociTeeImageName = ociImageBase + '-unlocked:dev'
+    jarPathForOCI = relativePath(tasks.shadowJar.outputs.files.singleFile)
 }
 
 if (gitBranch != 'main' && gitBranch != 'master' && !(gitBranch ==~ '(release|hotfix|support)/.*')) {
@@ -48,6 +51,26 @@ dependencies {
     testImplementation 'org.mockito:mockito-junit-jupiter:3.6.0'
     testImplementation 'org.assertj:assertj-core:3.18.1'
 }
+
+test {
+    useJUnitPlatform()
+    reports {
+        junitXml.enabled = true
+        html.enabled = true
+    }
+}
+
+jacoco {
+    toolVersion = "0.8.7"
+}
+// sonarqube code coverage requires jacoco XML report
+jacocoTestReport {
+    reports {
+        xml.enabled true
+    }
+}
+tasks.test.finalizedBy    tasks.jacocoTestReport
+tasks.sonarqube.dependsOn tasks.jacocoTestReport
 
 def mainClass = 'com.iexec.worker.tee.pre.Main'
 
