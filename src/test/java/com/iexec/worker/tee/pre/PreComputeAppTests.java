@@ -20,22 +20,28 @@ import com.iexec.common.replicate.ReplicateStatusCause;
 import com.iexec.common.utils.FileHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.io.File;
 import java.util.List;
 
+import static com.iexec.common.precompute.PreComputeUtils.*;
+import static com.iexec.common.utils.IexecEnvUtils.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.*;
 
 /**
  * This is a primary validation test for
  * pre-compute execution.
  */
+@ExtendWith(SystemStubsExtension.class)
 class PreComputeAppTests {
 
     private static final String REPO_URL = "https://raw.githubusercontent.com/" +
@@ -57,22 +63,39 @@ class PreComputeAppTests {
     @TempDir
     File outputDir;
 
-    @Spy
-    PreComputeApp preComputeApp = new PreComputeApp();
+    PreComputeApp preComputeApp;
 
     @BeforeEach
-    void beforeEach() throws Exception {
+    void beforeEach() {
         MockitoAnnotations.openMocks(this);
+        preComputeApp = spy(new PreComputeApp(CHAIN_TASK_ID));
     }
 
-    // @Test
-    // void shouldRunSuccessfully() throws Exception {
-    //     assertDoesNotThrow(() -> preComputeApp.run());
-    //     String decryptedFilepath = outputDir.getAbsolutePath() + "/" + DATASET_FILENAME;
-    //     String decryptedFileContent = FileHelper.readFile(decryptedFilepath);
-    //     String originalFileContent = FileHelper.readFile(PLAIN_DATA_FILE);
-    //     assertThat(decryptedFileContent).isEqualTo(originalFileContent);
-    // }
+     @Test
+     void shouldRunSuccessfully(EnvironmentVariables environment) throws PreComputeException {
+         environment.set(
+                 IEXEC_TASK_ID, CHAIN_TASK_ID,
+                 IEXEC_PRE_COMPUTE_OUT, outputDir.getAbsolutePath(),
+                 IS_DATASET_REQUIRED, true,
+                 IEXEC_DATASET_URL, DATASET_URL,
+                 IEXEC_DATASET_KEY, FileHelper.readFile(KEY_FILE),
+                 IEXEC_DATASET_CHECKSUM, DATASET_CHECKSUM,
+                 IEXEC_DATASET_FILENAME, DATASET_FILENAME,
+                 IEXEC_INPUT_FILES_NUMBER, 2,
+                 IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_1_URL,
+                 IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_2_URL
+         );
+
+         final byte[] encryptedDataset = "encryptedDataset".getBytes();
+         final byte[] plainContent = "plainContent".getBytes();
+
+         doNothing().when(preComputeApp).checkOutputFolder();
+         doReturn(encryptedDataset).when(preComputeApp).downloadEncryptedDataset();
+         doReturn(plainContent).when(preComputeApp).decryptDataset(encryptedDataset);
+         doNothing().when(preComputeApp).savePlainDatasetFile(plainContent);
+
+         assertDoesNotThrow(() -> preComputeApp.run());
+     }
 
     @Test
     void shouldFindOutputFolder() {
