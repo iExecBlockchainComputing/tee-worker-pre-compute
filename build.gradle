@@ -21,6 +21,7 @@ ext {
     ociImageBase = 'nexus.iex.ec/' + rootProject.name
     ociImageName = ociImageBase + ':dev'
     ociTeeImageName = ociImageBase + '-unlocked:dev'
+    jarPathForOCI = relativePath(tasks.shadowJar.outputs.files.singleFile)
 }
 
 if (gitBranch != 'main' && gitBranch != 'master' && !(gitBranch ==~ '(release|hotfix|support)/.*')) {
