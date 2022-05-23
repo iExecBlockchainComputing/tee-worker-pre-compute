@@ -1,4 +1,4 @@
-@Library('global-jenkins-library@1.9.0') _
+@Library('global-jenkins-library@feature/publish-oci-images-on-azure') _
 
 String repositoryName = 'tee-worker-pre-compute'
 
@@ -16,7 +16,7 @@ buildJavaProject(
         productionVisibility: 'docker.io')
 
 sconeBuildUnlocked(
-        nativeImage:     "nexus.iex.ec/$repositoryName:$buildInfo.shortCommit",
+        nativeImage:     "nexus.iex.ec/$repositoryName:$buildInfo.imageTag",
         imageName:       repositoryName,
         imageTag:        buildInfo.imageTag,
         sconifyArgsPath: './docker/sconify.args'
