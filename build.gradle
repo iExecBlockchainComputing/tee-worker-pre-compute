@@ -40,10 +40,14 @@ repositories {
     }
 }
 
+configurations {
+    itestCompile.extendsFrom testCompile
+    itestImplementation.extendsFrom testImplementation
+}
+
 dependencies {
     // iexec
     implementation "com.iexec.common:iexec-common:$iexecCommonVersion"
-    //implementation files("../iexec-common/build/libs/iexec-common-${iexecCommonVersion}.jar")
 
     // test
     testImplementation 'org.junit.jupiter:junit-jupiter:5.7.0'
@@ -52,12 +56,20 @@ dependencies {
     testImplementation 'org.assertj:assertj-core:3.18.1'
 }
 
-test {
-    useJUnitPlatform()
-    reports {
-        junitXml.enabled = true
-        html.enabled = true
+sourceSets {
+    itest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
     }
+}
+
+tasks.withType(Tar) {
+    enabled = false
+}
+
+tasks.withType(Test) {
+    finalizedBy jacocoTestReport
+    useJUnitPlatform()
 }
 
 jacoco {
@@ -69,7 +81,6 @@ jacocoTestReport {
         xml.enabled true
     }
 }
-tasks.test.finalizedBy    tasks.jacocoTestReport
 tasks.sonarqube.dependsOn tasks.jacocoTestReport
 
 def mainClass = 'com.iexec.worker.tee.pre.Main'
@@ -121,4 +132,12 @@ task buildTeeImage(type: Exec) {
     commandLine("sh", "-c", "IMG_FROM=$ociImageName IMG_TO=$ociTeeImageName " +
             "./docker/sconify.sh " +
             "&& docker run -e SCONE_HASH=1 $ociTeeImageName")
+}
+
+task itest(type: Test) {
+    group 'Verification'
+    description 'Runs the integration tests.'
+    dependsOn buildImage
+    testClassesDirs = sourceSets.itest.output.classesDirs
+    classpath = sourceSets.itest.runtimeClasspath
 }
