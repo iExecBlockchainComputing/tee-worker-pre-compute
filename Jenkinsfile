@@ -1,4 +1,4 @@
-@Library('global-jenkins-library@feature/publish-oci-images-on-azure') _
+@Library('global-jenkins-library@1.9.1') _
 
 String repositoryName = 'tee-worker-pre-compute'
 
