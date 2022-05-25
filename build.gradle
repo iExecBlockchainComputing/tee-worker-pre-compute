@@ -21,6 +21,7 @@ ext {
     ociImageBase = 'nexus.iex.ec/' + rootProject.name
     ociImageName = ociImageBase + ':dev'
     ociTeeImageName = ociImageBase + '-unlocked:dev'
+    jarPathForOCI = relativePath(tasks.shadowJar.outputs.files.singleFile)
     mockitoVersion = '4.4.0'
     systemStubsVersion = '2.0.1'
 }
@@ -44,7 +45,6 @@ repositories {
 dependencies {
     // iexec
     implementation "com.iexec.common:iexec-common:$iexecCommonVersion"
-    //implementation files("../iexec-common/build/libs/iexec-common-${iexecCommonVersion}.jar")
 
     // test
     testImplementation 'org.junit.jupiter:junit-jupiter:5.7.0'
@@ -56,12 +56,20 @@ dependencies {
     testImplementation "org.mockito:mockito-inline:$mockitoVersion" // activates mocking final classes/methods
 }
 
-test {
-    useJUnitPlatform()
-    reports {
-        junitXml.enabled = true
-        html.enabled = true
+sourceSets {
+    itest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
     }
+}
+
+tasks.withType(Tar) {
+    enabled = false
+}
+
+tasks.withType(Test) {
+    finalizedBy jacocoTestReport
+    useJUnitPlatform()
 }
 
 jacoco {
@@ -73,7 +81,6 @@ jacocoTestReport {
         xml.enabled true
     }
 }
-tasks.test.finalizedBy    tasks.jacocoTestReport
 tasks.sonarqube.dependsOn tasks.jacocoTestReport
 
 def mainClass = 'com.iexec.worker.tee.pre.Main'
@@ -125,4 +132,12 @@ task buildTeeImage(type: Exec) {
     commandLine("sh", "-c", "IMG_FROM=$ociImageName IMG_TO=$ociTeeImageName " +
             "./docker/sconify.sh " +
             "&& docker run -e SCONE_HASH=1 $ociTeeImageName")
+}
+
+task itest(type: Test) {
+    group 'Verification'
+    description 'Runs the integration tests.'
+    dependsOn buildImage
+    testClassesDirs = sourceSets.itest.output.classesDirs
+    classpath = sourceSets.itest.runtimeClasspath
 }
