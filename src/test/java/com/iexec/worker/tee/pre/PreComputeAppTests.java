@@ -23,7 +23,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
@@ -71,8 +70,9 @@ class PreComputeAppTests {
         preComputeApp = spy(new PreComputeApp(CHAIN_TASK_ID));
     }
 
+    //region run
      @Test
-     void shouldRunSuccessfully(EnvironmentVariables environment) throws PreComputeException {
+     void shouldRunSuccessfullyWithDataset(EnvironmentVariables environment) throws PreComputeException {
          environment.set(
                  IEXEC_TASK_ID, CHAIN_TASK_ID,
                  IEXEC_PRE_COMPUTE_OUT, outputDir.getAbsolutePath(),
@@ -93,9 +93,32 @@ class PreComputeAppTests {
          doReturn(encryptedDataset).when(preComputeApp).downloadEncryptedDataset();
          doReturn(plainContent).when(preComputeApp).decryptDataset(encryptedDataset);
          doNothing().when(preComputeApp).savePlainDatasetFile(plainContent);
+         doNothing().when(preComputeApp).downloadInputFiles();
 
          assertDoesNotThrow(() -> preComputeApp.run());
      }
+
+     @Test
+     void shouldRunSuccessfullyWithoutDataset(EnvironmentVariables environment) throws PreComputeException {
+         environment.set(
+                 IEXEC_TASK_ID, CHAIN_TASK_ID,
+                 IEXEC_PRE_COMPUTE_OUT, outputDir.getAbsolutePath(),
+                 IS_DATASET_REQUIRED, false,
+                 IEXEC_INPUT_FILES_NUMBER, 2,
+                 IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_1_URL,
+                 IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_2_URL
+         );
+
+         doNothing().when(preComputeApp).checkOutputFolder();
+         doNothing().when(preComputeApp).downloadInputFiles();
+
+         assertDoesNotThrow(() -> preComputeApp.run());
+
+         verify(preComputeApp, times(0)).downloadEncryptedDataset();
+         verify(preComputeApp, times(0)).decryptDataset(any());
+         verify(preComputeApp, times(0)).savePlainDatasetFile(any());
+     }
+     //endregion
 
     @Test
     void shouldFindOutputFolder() {
