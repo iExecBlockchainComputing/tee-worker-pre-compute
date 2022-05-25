@@ -15,12 +15,10 @@ import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import static com.iexec.common.utils.IexecEnvUtils.IEXEC_TASK_ID;
-import static com.iexec.common.worker.result.ResultUtils.RESULT_TASK_ID;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static uk.org.webcompere.systemstubs.SystemStubs.catchSystemExit;
 
 @ExtendWith(SystemStubsExtension.class)
 class PreComputeAppRunnerTests {
@@ -35,8 +33,8 @@ class PreComputeAppRunnerTests {
     }
 
     @Test
-    void noTaskId() throws Exception {
-        final int exitStatus = catchSystemExit(preComputeAppRunner::start);
+    void noTaskId() {
+        final int exitStatus = preComputeAppRunner.start();
         assertEquals(3, exitStatus);
     }
 
@@ -48,7 +46,7 @@ class PreComputeAppRunnerTests {
         when(preComputeAppRunner.createPreComputeApp(CHAIN_TASK_ID)).thenReturn(preComputeApp);
         doNothing().when(preComputeApp).run();
 
-        final int exitStatus = catchSystemExit(preComputeAppRunner::start);
+        final int exitStatus = preComputeAppRunner.start();
 
         assertEquals(0, exitStatus);
     }
@@ -68,7 +66,7 @@ class PreComputeAppRunnerTests {
         try (MockedStatic<WorkerApiManager> workerApiManager = Mockito.mockStatic(WorkerApiManager.class)) {
             workerApiManager.when(WorkerApiManager::getWorkerApiClient)
                     .thenReturn(workerApiClient);
-            final int exitStatus = catchSystemExit(preComputeAppRunner::start);
+            final int exitStatus = preComputeAppRunner.start();
             assertEquals(1, exitStatus);
         }
     }
@@ -86,7 +84,7 @@ class PreComputeAppRunnerTests {
         try (MockedStatic<WorkerApiManager> workerApiManager = Mockito.mockStatic(WorkerApiManager.class)) {
             workerApiManager.when(WorkerApiManager::getWorkerApiClient)
                     .thenReturn(workerApiClient);
-            final int exitStatus = catchSystemExit(preComputeAppRunner::start);
+            final int exitStatus = preComputeAppRunner.start();
             assertEquals(1, exitStatus);
         }
     }
@@ -107,7 +105,7 @@ class PreComputeAppRunnerTests {
         try (MockedStatic<WorkerApiManager> workerApiManager = Mockito.mockStatic(WorkerApiManager.class)) {
             workerApiManager.when(WorkerApiManager::getWorkerApiClient)
                     .thenReturn(workerApiClient);
-            final int exitStatus = catchSystemExit(preComputeAppRunner::start);
+            final int exitStatus = preComputeAppRunner.start();
             assertEquals(2, exitStatus);
         }
     }
