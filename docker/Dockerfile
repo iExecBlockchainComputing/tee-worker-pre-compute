@@ -1,6 +1,6 @@
 ## CI/CD version
 ## git clone, then cd into
-## docker image build -f docker/Dockerfile -t nexus.iex.ec/tee-worker-pre-compute:dev . --no-cache
+## docker image build -f docker/Dockerfile -t nexus.intra.iex.ec/tee-worker-pre-compute:dev . --no-cache
 
 ARG HOME=/home
 ARG JAR_PATH=$HOME/build/libs/app-all.jar

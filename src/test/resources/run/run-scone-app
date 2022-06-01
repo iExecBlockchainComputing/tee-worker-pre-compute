@@ -8,7 +8,7 @@ echo "Starting CAS & LAS:"
 docker-compose up -d
 sleep 5
 
-MY_SCONE_APP=nexus.iex.ec/tee-worker-pre-compute:d21eb78-dev-local
+MY_SCONE_APP=nexus.intra.iex.ec/tee-worker-pre-compute:d21eb78-dev-local
 echo "Starting $MY_SCONE_APP"
 docker run --rm \
         --name=my-scone-app \
