@@ -46,7 +46,7 @@ public class PreComputeAppRunner {
             System.exit(3);
         }
         try {
-            new PreComputeApp(chainTaskId).run();
+            createPreComputeApp(chainTaskId).run();
             log.info("TEE pre-compute completed");
             System.exit(0);
         } catch (PreComputeException e) {
@@ -65,6 +65,10 @@ public class PreComputeAppRunner {
             log.error("Failed to report exit exitCause [exitCause:{}]", exitCause, e);
         }
         System.exit(2);
+    }
+
+    PreComputeApp createPreComputeApp(String chainTaskId) {
+        return new PreComputeApp(chainTaskId);
     }
 
 }

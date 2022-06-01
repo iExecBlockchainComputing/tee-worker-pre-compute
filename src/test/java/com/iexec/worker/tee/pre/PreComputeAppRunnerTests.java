@@ -32,7 +32,7 @@ class PreComputeAppRunnerTests {
     @BeforeEach
     void openMocks() {
         MockitoAnnotations.openMocks(this);
-        when(new PreComputeApp(CHAIN_TASK_ID)).thenReturn(preComputeApp);
+        when(preComputeAppRunner.createPreComputeApp(CHAIN_TASK_ID)).thenReturn(preComputeApp);
     }
 
     @Test
