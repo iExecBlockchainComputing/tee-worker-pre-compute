@@ -18,7 +18,7 @@ plugins {
 
 ext {
     gitBranch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
-    ociImageBase = 'nexus.iex.ec/' + rootProject.name
+    ociImageBase = 'nexus.intra.iex.ec/' + rootProject.name
     ociImageName = ociImageBase + ':dev'
     ociTeeImageName = ociImageBase + '-unlocked:dev'
     jarPathForOCI = relativePath(tasks.shadowJar.outputs.files.singleFile)
@@ -35,7 +35,7 @@ repositories {
     mavenCentral()
     // iExec
     maven {
-        url "https://nexus.iex.ec/repository/maven-public/"
+        url "https://nexus.intra.iex.ec/repository/maven-public/"
     }
     maven {
         url "https://jitpack.io"
