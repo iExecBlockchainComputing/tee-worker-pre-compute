@@ -67,7 +67,7 @@ public class PreComputeAppRunner {
         exit(2);
     }
 
-    private void exit(int exitCode) {
+    void exit(int exitCode) {
         System.exit(exitCode);
     }
 
