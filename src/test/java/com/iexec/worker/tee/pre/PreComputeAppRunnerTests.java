@@ -8,7 +8,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
-import org.mockito.internal.verification.Times;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
@@ -33,7 +32,7 @@ class PreComputeAppRunnerTests {
     @BeforeEach
     void openMocks() {
         MockitoAnnotations.openMocks(this);
-        when(preComputeAppRunner.createPreComputeApp(CHAIN_TASK_ID)).thenReturn(preComputeApp);
+        when(new PreComputeApp(CHAIN_TASK_ID)).thenReturn(preComputeApp);
     }
 
     @Test
@@ -49,9 +48,7 @@ class PreComputeAppRunnerTests {
         doNothing().when(preComputeApp).run();
 
         final int actualExitCode = catchSystemExit(() -> preComputeAppRunner.start());
-        int expected = 0;
-        assertEquals(expected, actualExitCode);
-        verify(preComputeAppRunner, times(1)).exit(expected);
+        assertEquals(0, actualExitCode);
     }
 
     @Test

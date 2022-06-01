@@ -43,12 +43,12 @@ public class PreComputeAppRunner {
             chainTaskId = PreComputeArgs.getEnvVarOrThrow(IEXEC_TASK_ID);
         } catch (PreComputeException e) {
             log.error("TEE pre-compute cannot go further without taskID context", e);
-            exit(3);
+            System.exit(3);
         }
         try {
-            createPreComputeApp(chainTaskId).run();
+            new PreComputeApp(chainTaskId).run();
             log.info("TEE pre-compute completed");
-            exit(0);
+            System.exit(0);
         } catch (PreComputeException e) {
             exitCause = e.getExitCause();
             log.error("TEE pre-compute failed with a known exitCause " +
@@ -60,18 +60,11 @@ public class PreComputeAppRunner {
             getWorkerApiClient()
                     .sendExitCauseForPreComputeStage(chainTaskId,
                             new ExitMessage(exitCause));
-            exit(1);
+            System.exit(1);
         } catch (FeignException e) {
             log.error("Failed to report exit exitCause [exitCause:{}]", exitCause, e);
         }
-        exit(2);
+        System.exit(2);
     }
 
-    void exit(int exitCode) {
-        System.exit(exitCode);
-    }
-
-    PreComputeApp createPreComputeApp(String chainTaskId) {
-        return new PreComputeApp(chainTaskId);
-    }
 }
