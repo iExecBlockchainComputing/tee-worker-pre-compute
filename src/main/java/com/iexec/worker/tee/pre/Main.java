@@ -18,16 +18,8 @@ package com.iexec.worker.tee.pre;
 
 public class Main {
 
-    static PreComputeAppRunner preComputeAppRunner;
-
-    public static void main(String[] args) {
-        final int exitCode = getPreComputeAppRunner().start();
-        System.exit(exitCode);
+    public static void main(String... args) {
+        System.exit(new PreComputeAppRunner().start());
     }
 
-    static PreComputeAppRunner getPreComputeAppRunner() {
-        return preComputeAppRunner == null
-                ? new PreComputeAppRunner()
-                : preComputeAppRunner;
-    }
 }
