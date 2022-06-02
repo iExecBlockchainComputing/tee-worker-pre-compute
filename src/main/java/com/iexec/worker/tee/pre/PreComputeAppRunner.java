@@ -27,10 +27,6 @@ import static com.iexec.worker.tee.pre.worker.WorkerApiManager.getWorkerApiClien
 @Slf4j
 public class PreComputeAppRunner {
 
-    public static PreComputeAppRunner build() {
-        return new PreComputeAppRunner();
-    }
-
     /**
      * Run PreComputeApp and handle possible exceptions.
      * Exits:

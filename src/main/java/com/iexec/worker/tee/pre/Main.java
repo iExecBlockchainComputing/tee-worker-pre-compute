@@ -19,8 +19,7 @@ package com.iexec.worker.tee.pre;
 public class Main {
 
     public static void main(String... args) {
-        final int exitCode = PreComputeAppRunner.build().start();
-        System.exit(exitCode);
+        System.exit(new PreComputeAppRunner().start());
     }
 
 }
