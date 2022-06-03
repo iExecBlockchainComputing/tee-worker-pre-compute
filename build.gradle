@@ -22,6 +22,8 @@ ext {
     ociImageName = ociImageBase + ':dev'
     ociTeeImageName = ociImageBase + '-unlocked:dev'
     jarPathForOCI = relativePath(tasks.shadowJar.outputs.files.singleFile)
+    mockitoVersion = '4.4.0'
+    systemStubsVersion = '2.0.1'
 }
 
 if (gitBranch != 'main' && gitBranch != 'master' && !(gitBranch ==~ '(release|hotfix|support)/.*')) {
@@ -40,20 +42,18 @@ repositories {
     }
 }
 
-configurations {
-    itestCompile.extendsFrom testCompile
-    itestImplementation.extendsFrom testImplementation
-}
-
 dependencies {
     // iexec
     implementation "com.iexec.common:iexec-common:$iexecCommonVersion"
 
     // test
     testImplementation 'org.junit.jupiter:junit-jupiter:5.7.0'
-    testImplementation 'org.mockito:mockito-core:3.6.0'
-    testImplementation 'org.mockito:mockito-junit-jupiter:3.6.0'
     testImplementation 'org.assertj:assertj-core:3.18.1'
+    testImplementation "uk.org.webcompere:system-stubs-core:$systemStubsVersion"    // activates env var setting
+    testImplementation "uk.org.webcompere:system-stubs-jupiter:$systemStubsVersion" // activates env var setting
+    testImplementation "org.mockito:mockito-core:$mockitoVersion"
+    testImplementation "org.mockito:mockito-junit-jupiter:$mockitoVersion"
+    testImplementation "org.mockito:mockito-inline:$mockitoVersion" // activates mocking final classes/methods
 }
 
 sourceSets {

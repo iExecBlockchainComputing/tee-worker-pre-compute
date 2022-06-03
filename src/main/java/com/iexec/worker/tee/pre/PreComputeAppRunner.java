@@ -17,23 +17,15 @@
 package com.iexec.worker.tee.pre;
 
 import com.iexec.common.replicate.ReplicateStatusCause;
-import com.iexec.common.utils.FeignBuilder;
 import com.iexec.common.worker.api.ExitMessage;
-import com.iexec.worker.tee.pre.worker.WorkerApiClient;
 import feign.FeignException;
-import feign.Logger;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.iexec.common.utils.IexecEnvUtils.IEXEC_TASK_ID;
+import static com.iexec.worker.tee.pre.worker.WorkerApiManager.getWorkerApiClient;
 
 @Slf4j
 public class PreComputeAppRunner {
-
-    public static final String WORKER_HOST = "worker:13100";
-
-    private PreComputeAppRunner() {
-        throw new UnsupportedOperationException();
-    }
 
     /**
      * Run PreComputeApp and handle possible exceptions.
@@ -43,7 +35,7 @@ public class PreComputeAppRunner {
      * - 2: Failure; Unreported cause (report issue)
      * - 3: Failure; Unreported cause (task context missing)
      */
-    public static void start() {
+    public int start() {
         log.info("TEE pre-compute started");
         ReplicateStatusCause exitCause = ReplicateStatusCause.PRE_COMPUTE_FAILED_UNKNOWN_ISSUE;
         String chainTaskId = "";
@@ -51,12 +43,12 @@ public class PreComputeAppRunner {
             chainTaskId = PreComputeArgs.getEnvVarOrThrow(IEXEC_TASK_ID);
         } catch (PreComputeException e) {
             log.error("TEE pre-compute cannot go further without taskID context", e);
-            System.exit(3);
+            return 3;
         }
         try {
-            new PreComputeApp().run(chainTaskId);
+            createPreComputeApp(chainTaskId).run();
             log.info("TEE pre-compute completed");
-            System.exit(0);
+            return 0;
         } catch (PreComputeException e) {
             exitCause = e.getExitCause();
             log.error("TEE pre-compute failed with a known exitCause " +
@@ -65,16 +57,17 @@ public class PreComputeAppRunner {
             log.error("TEE pre-compute failed without explicit exitCause", e);
         }
         try {
-            FeignBuilder
-                    .createBuilder(Logger.Level.FULL)
-                    .target(WorkerApiClient.class, "http://" + WORKER_HOST)
+            getWorkerApiClient()
                     .sendExitCauseForPreComputeStage(chainTaskId,
                             new ExitMessage(exitCause));
-            System.exit(1);
+            return 1;
         } catch (FeignException e) {
             log.error("Failed to report exit exitCause [exitCause:{}]", exitCause, e);
         }
-        System.exit(2);
+        return 2;
     }
 
+    PreComputeApp createPreComputeApp(String chainTaskId) {
+        return new PreComputeApp(chainTaskId);
+    }
 }

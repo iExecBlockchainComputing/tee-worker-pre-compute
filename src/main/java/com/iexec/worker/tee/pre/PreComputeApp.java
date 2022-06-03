@@ -28,18 +28,20 @@ import java.security.GeneralSecurityException;
 @Slf4j
 public class PreComputeApp {
 
-    private String chainTaskId; // just for convenience
+    private final String chainTaskId; // just for convenience
     private PreComputeArgs preComputeArgs;
+
+    public PreComputeApp(String chainTaskId) {
+        this.chainTaskId = chainTaskId;
+    }
 
     /**
      * Download, decrypt, and save the plain dataset file in "/iexec_in".
      * If the decrypted file is an archive, it won't be extracted.
      * 
      * @throws PreComputeException
-     * @param chainTaskId
      */
-    void run(String chainTaskId) throws PreComputeException {
-        this.chainTaskId = chainTaskId;
+    void run() throws PreComputeException {
         preComputeArgs = PreComputeArgs.readArgs(chainTaskId);
         checkOutputFolder();
         if (preComputeArgs.isDatasetRequired()) {

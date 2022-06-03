@@ -18,7 +18,8 @@ package com.iexec.worker.tee.pre;
 
 public class Main {
 
-    public static void main(String[] args) {
-        PreComputeAppRunner.start();
+    public static void main(String... args) {
+        System.exit(new PreComputeAppRunner().start());
     }
+
 }

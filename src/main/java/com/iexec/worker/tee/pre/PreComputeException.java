@@ -19,7 +19,6 @@ package com.iexec.worker.tee.pre;
 import com.iexec.common.replicate.ReplicateStatusCause;
 import lombok.Getter;
 
-@SuppressWarnings("serial")
 public class PreComputeException extends Exception {
 
     @Getter
