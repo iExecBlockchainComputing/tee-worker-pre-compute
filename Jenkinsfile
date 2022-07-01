@@ -1,7 +1,23 @@
-// Readme @ http://gitlab.iex.ec:30000/iexec/jenkins-library
-@Library('global-jenkins-library@1.6.2') _
+@Library('global-jenkins-library@2.0.1') _
 
-def nativeImage = buildSimpleDocker_v2(dockerfileDir: './docker', buildContext: '.',
-        dockerImageRepositoryName: 'tee-worker-pre-compute', imageprivacy: 'public')
-sconeBuildAllTee(nativeImage: nativeImage, targetImageRepositoryName: 'tee-worker-pre-compute',
-        sconifyArgsPath: './docker/sconify.args')
+String repositoryName = 'tee-worker-pre-compute'
+
+buildInfo = getBuildInfo()
+
+buildJavaProject(
+        buildInfo: buildInfo,
+        integrationTestsEnvVars: [],
+        shouldPublishJars: false,
+        shouldPublishDockerImages: true,
+        dockerfileDir: 'docker',
+        buildContext: '.',
+        dockerImageRepositoryName: repositoryName,
+        preProductionVisibility: 'docker.io',
+        productionVisibility: 'docker.io')
+
+sconeBuildUnlocked(
+        nativeImage:     "docker-regis.iex.ec/$repositoryName:$buildInfo.imageTag",
+        imageName:       repositoryName,
+        imageTag:        buildInfo.imageTag,
+        sconifyArgsPath: './docker/sconify.args'
+)

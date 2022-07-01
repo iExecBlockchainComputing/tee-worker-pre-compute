@@ -16,31 +16,58 @@
 
 package com.iexec.worker.tee.pre;
 
-import com.iexec.common.precompute.PreComputeExitCode;
+import com.iexec.common.replicate.ReplicateStatusCause;
+import com.iexec.common.worker.api.ExitMessage;
+import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
+
+import static com.iexec.common.utils.IexecEnvUtils.IEXEC_TASK_ID;
+import static com.iexec.worker.tee.pre.worker.WorkerApiManager.getWorkerApiClient;
 
 @Slf4j
 public class PreComputeAppRunner {
 
     /**
      * Run PreComputeApp and handle possible exceptions.
+     * Exits:
+     * - 0: Success
+     * - 1: Failure; Reported cause (known or unknown)
+     * - 2: Failure; Unreported cause (report issue)
+     * - 3: Failure; Unreported cause (task context missing)
      */
-    public static void start() {
+    public int start() {
         log.info("TEE pre-compute started");
-        int exitCode = PreComputeExitCode.SUCCESS.value();
+        ReplicateStatusCause exitCause = ReplicateStatusCause.PRE_COMPUTE_FAILED_UNKNOWN_ISSUE;
+        String chainTaskId = "";
         try {
-            new PreComputeApp().run();
-        } catch(PreComputeException e) {
-            log.error("TEE pre-compute failed with a known error " +
-                    "[errorMessage:{}, errorCode:{}]", e.getExitCode(),
-                    e.getExitCode().value(), e);
-            exitCode = e.getExitCode().value();
-        } catch (Exception e) {
-            log.error("TEE pre-compute failed with an unknown error", e);
-            exitCode = PreComputeExitCode.UNKNOWN_ERROR.value();
-        } finally {
-            log.info("TEE pre-compute finished");
-            System.exit(exitCode);
+            chainTaskId = PreComputeArgs.getEnvVarOrThrow(IEXEC_TASK_ID);
+        } catch (PreComputeException e) {
+            log.error("TEE pre-compute cannot go further without taskID context", e);
+            return 3;
         }
+        try {
+            createPreComputeApp(chainTaskId).run();
+            log.info("TEE pre-compute completed");
+            return 0;
+        } catch (PreComputeException e) {
+            exitCause = e.getExitCause();
+            log.error("TEE pre-compute failed with a known exitCause " +
+                    "[exitCause:{}]", exitCause, e);
+        } catch (Exception e) {
+            log.error("TEE pre-compute failed without explicit exitCause", e);
+        }
+        try {
+            getWorkerApiClient()
+                    .sendExitCauseForPreComputeStage(chainTaskId,
+                            new ExitMessage(exitCause));
+            return 1;
+        } catch (FeignException e) {
+            log.error("Failed to report exit exitCause [exitCause:{}]", exitCause, e);
+        }
+        return 2;
+    }
+
+    PreComputeApp createPreComputeApp(String chainTaskId) {
+        return new PreComputeApp(chainTaskId);
     }
 }

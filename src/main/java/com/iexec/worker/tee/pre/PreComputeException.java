@@ -16,21 +16,16 @@
 
 package com.iexec.worker.tee.pre;
 
-import com.iexec.common.precompute.PreComputeExitCode;
+import com.iexec.common.replicate.ReplicateStatusCause;
 import lombok.Getter;
 
-@SuppressWarnings("serial")
 public class PreComputeException extends Exception {
 
     @Getter
-    private PreComputeExitCode exitCode;
+    private final ReplicateStatusCause exitCause;
 
-    public PreComputeException(PreComputeExitCode exitCode) {
-        this(exitCode, exitCode.name());
+    public PreComputeException(ReplicateStatusCause exitCause) {
+        this.exitCause = exitCause;
     }
 
-    public PreComputeException(PreComputeExitCode exitCode, String message) {
-        super(message);
-        this.exitCode = exitCode;
-    }
 }

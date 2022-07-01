@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-package com.iexec.worker.tee.pre;
+package com.iexec.worker.tee.pre.worker;
 
-public class Main {
+import com.iexec.common.worker.api.ExitMessage;
+import feign.Param;
+import feign.RequestLine;
 
-    public static void main(String... args) {
-        System.exit(new PreComputeAppRunner().start());
-    }
+public interface WorkerApiClient {
+
+    @RequestLine("POST /compute/pre/{chainTaskId}/exit")
+    void sendExitCauseForPreComputeStage(@Param("chainTaskId") String chainTaskId,
+                                         ExitMessage exitMessage);
 
 }

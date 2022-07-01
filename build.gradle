@@ -9,6 +9,8 @@
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     id 'application'
+    id 'jacoco'
+    id 'org.sonarqube' version '3.3'
     id 'com.palantir.docker' version '0.26.0'
     id 'com.github.johnrengelman.shadow' version '6.1.0'
     id 'io.freefair.lombok' version '5.3.0'
@@ -16,18 +18,24 @@ plugins {
 
 ext {
     gitBranch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
+    ociImageBase = 'nexus.intra.iex.ec/' + rootProject.name
+    ociImageName = ociImageBase + ':dev'
+    ociTeeImageName = ociImageBase + '-unlocked:dev'
+    jarPathForOCI = relativePath(tasks.shadowJar.outputs.files.singleFile)
+    mockitoVersion = '4.4.0'
+    systemStubsVersion = '2.0.1'
 }
 
-if (gitBranch != 'main' && gitBranch != 'master' && ! (gitBranch ==~ '(release|hotfix|support)/.*')) {
+if (gitBranch != 'main' && gitBranch != 'master' && !(gitBranch ==~ '(release|hotfix|support)/.*')) {
     version += '-NEXT-SNAPSHOT'
 }
 
 repositories {
-    // Use JCenter for resolving dependencies.
-        jcenter()
+    mavenLocal()
+    mavenCentral()
     // iExec
     maven {
-        url "https://nexus.iex.ec/repository/maven-public/"
+        url "https://nexus.intra.iex.ec/repository/maven-public/"
     }
     maven {
         url "https://jitpack.io"
@@ -37,15 +45,43 @@ repositories {
 dependencies {
     // iexec
     implementation "com.iexec.common:iexec-common:$iexecCommonVersion"
-    //implementation files("../iexec-common/build/libs/iexec-common-${iexecCommonVersion}.jar")
 
     // test
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.0'
-    testImplementation 'org.mockito:mockito-core:3.6.0'
-    testImplementation 'org.mockito:mockito-junit-jupiter:3.6.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.7.0'
     testImplementation 'org.assertj:assertj-core:3.18.1'
+    testImplementation "uk.org.webcompere:system-stubs-core:$systemStubsVersion"    // activates env var setting
+    testImplementation "uk.org.webcompere:system-stubs-jupiter:$systemStubsVersion" // activates env var setting
+    testImplementation "org.mockito:mockito-core:$mockitoVersion"
+    testImplementation "org.mockito:mockito-junit-jupiter:$mockitoVersion"
+    testImplementation "org.mockito:mockito-inline:$mockitoVersion" // activates mocking final classes/methods
 }
+
+sourceSets {
+    itest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+tasks.withType(Tar) {
+    enabled = false
+}
+
+tasks.withType(Test) {
+    finalizedBy jacocoTestReport
+    useJUnitPlatform()
+}
+
+jacoco {
+    toolVersion = "0.8.7"
+}
+// sonarqube code coverage requires jacoco XML report
+jacocoTestReport {
+    reports {
+        xml.enabled true
+    }
+}
+tasks.sonarqube.dependsOn tasks.jacocoTestReport
 
 def mainClass = 'com.iexec.worker.tee.pre.Main'
 
@@ -80,13 +116,28 @@ tasks.named('test') {
 }
 
 docker {
-    name 'nexus.iex.ec/' + rootProject.name + ':dev'
+    name ociImageName
     dockerfile file('docker/Dockerfile.local')
     files('build/libs/' + fatJar)
-    buildArgs([JAR_PATH: fatJar ])
+    buildArgs([JAR_PATH: fatJar])
 }
 tasks.docker.dependsOn tasks.build
 
 task buildImage {
     dependsOn tasks.docker
+}
+
+task buildTeeImage(type: Exec) {
+    dependsOn buildImage
+    commandLine("sh", "-c", "IMG_FROM=$ociImageName IMG_TO=$ociTeeImageName " +
+            "./docker/sconify.sh " +
+            "&& docker run -e SCONE_HASH=1 $ociTeeImageName")
+}
+
+task itest(type: Test) {
+    group 'Verification'
+    description 'Runs the integration tests.'
+    dependsOn buildImage
+    testClassesDirs = sourceSets.itest.output.classesDirs
+    classpath = sourceSets.itest.runtimeClasspath
 }
