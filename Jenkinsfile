@@ -19,5 +19,6 @@ sconeBuildUnlocked(
         nativeImage:     "docker-regis.iex.ec/$repositoryName:$buildInfo.imageTag",
         imageName:       repositoryName,
         imageTag:        buildInfo.imageTag,
-        sconifyArgsPath: './docker/sconify.args'
+        sconifyArgsPath: './docker/sconify.args',
+        sconifyVersion:  '5.7.1'
 )
