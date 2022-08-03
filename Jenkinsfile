@@ -1,4 +1,4 @@
-@Library('global-jenkins-library@2.0.2') _
+@Library('global-jenkins-library@2.1.1') _
 
 String repositoryName = 'tee-worker-pre-compute'
 
@@ -19,5 +19,6 @@ sconeBuildUnlocked(
         nativeImage:     "docker-regis.iex.ec/$repositoryName:$buildInfo.imageTag",
         imageName:       repositoryName,
         imageTag:        buildInfo.imageTag,
-        sconifyArgsPath: './docker/sconify.args'
+        sconifyArgsPath: './docker/sconify.args',
+        sconifyVersion:  '5.7.1'
 )

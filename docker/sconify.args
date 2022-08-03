@@ -7,7 +7,7 @@
 --host-path=/etc/resolv.conf \
 --binary=/usr/lib/jvm/java-11-openjdk/bin/java \
 --heap="4G" \
---dlopen="2" \
+--dlopen="1" \
 --verbose \
 --no-color \
 --command="java -jar /app/app.jar"
