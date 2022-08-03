@@ -1,4 +1,4 @@
-@Library('global-jenkins-library@2.0.2') _
+@Library('global-jenkins-library@2.1.1') _
 
 String repositoryName = 'tee-worker-pre-compute'
 
