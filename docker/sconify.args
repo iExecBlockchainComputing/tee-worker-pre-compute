@@ -6,7 +6,7 @@
 --host-path=/etc/hosts \
 --host-path=/etc/resolv.conf \
 --binary=/usr/lib/jvm/java-11-openjdk/bin/java \
---heap="4G" \
+--heap="3G" \
 --dlopen="1" \
 --verbose \
 --no-color \
