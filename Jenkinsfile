@@ -1,4 +1,4 @@
-@Library('global-jenkins-library@feature/sonar-cloud-analysis') _
+@Library('global-jenkins-library@2.2.0') _
 
 String repositoryName = 'tee-worker-pre-compute'
 
