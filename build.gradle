@@ -18,13 +18,16 @@ plugins {
 }
 
 ext {
-    gitBranch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
     ociImageBase = 'docker-regis.iex.ec/' + rootProject.name
     ociImageName = ociImageBase + ':dev'
     ociTeeImageName = ociImageBase + '-unlocked:dev'
     jarPathForOCI = relativePath(tasks.shadowJar.outputs.files.singleFile)
     mockitoVersion = '4.4.0'
     systemStubsVersion = '2.0.1'
+}
+
+if (!project.hasProperty('gitBranch')) {
+    ext.gitBranch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
 }
 
 if (gitBranch != 'main' && gitBranch != 'master' && !(gitBranch ==~ '(release|hotfix|support)/.*')) {
