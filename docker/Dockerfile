@@ -33,4 +33,4 @@ ENV PATH $PATH:/usr/lib/jvm/java-11-openjdk/jre/bin:/usr/lib/jvm/java-11-openjdk
 RUN apk add --no-cache openjdk11 \
     && [ "$JAVA_HOME" = "$(docker-java-home)" ]
 RUN which java
-COPY build/libs/app-all.jar $JAR_PATH /app/app.jar
+COPY build/libs/app-all.jar /app/app.jar
