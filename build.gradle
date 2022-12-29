@@ -74,11 +74,17 @@ sourceSets {
     }
 }
 
-tasks.withType(Tar) {
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(11))
+    }
+}
+
+tasks.withType(Tar).configureEach {
     enabled = false
 }
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
     finalizedBy jacocoTestReport
     useJUnitPlatform()
 }
