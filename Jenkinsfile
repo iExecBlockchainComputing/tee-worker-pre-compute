@@ -9,7 +9,7 @@ buildJavaProject(
         integrationTestsEnvVars: [],
         shouldPublishJars: false,
         shouldPublishDockerImages: true,
-        dockerfileDir: 'docker',
+        dockerfileDir: '.',
         buildContext: '.',
         dockerImageRepositoryName: repositoryName,
         preProductionVisibility: 'docker.io',
