@@ -9,12 +9,12 @@
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     id 'application'
+    id 'io.freefair.lombok' version '6.6.1'
     id 'jacoco'
     id 'org.sonarqube' version '3.3'
     id 'maven-publish'
     id 'com.palantir.docker' version '0.26.0'
-    id 'com.github.johnrengelman.shadow' version '6.1.0'
-    id 'io.freefair.lombok' version '5.3.0'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
 ext {
@@ -74,11 +74,17 @@ sourceSets {
     }
 }
 
-tasks.withType(Tar) {
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(11))
+    }
+}
+
+tasks.withType(Tar).configureEach {
     enabled = false
 }
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
     finalizedBy jacocoTestReport
     useJUnitPlatform()
 }
@@ -89,7 +95,7 @@ jacoco {
 // sonarqube code coverage requires jacoco XML report
 jacocoTestReport {
     reports {
-        xml.enabled true
+        xml.required = true
     }
 }
 tasks.sonarqube.dependsOn tasks.jacocoTestReport
