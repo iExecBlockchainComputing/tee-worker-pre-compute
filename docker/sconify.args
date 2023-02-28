@@ -1,11 +1,12 @@
 --name=tee-pre-compute \
 --from=${IMG_FROM} \
+--base=openjdk:11.0.16-jre-slim \
 --to=${IMG_TO} \
 --binary-fs \
 --fs-dir=/app \
 --host-path=/etc/hosts \
 --host-path=/etc/resolv.conf \
---binary=/usr/lib/jvm/java-11-openjdk/bin/java \
+--binary=/usr/local/openjdk-11/bin/java \
 --heap="3G" \
 --dlopen="1" \
 --verbose \
