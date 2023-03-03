@@ -98,7 +98,7 @@ class PreComputeAppRunnerTests {
                 .when(preComputeApp).run();
 
         WorkerApiClient workerApiClient = mock(WorkerApiClient.class);
-        doThrow(mock(FeignException.NotFound.class))
+        doThrow(FeignException.NotFound.class)
                 .when(workerApiClient).sendExitCauseForPreComputeStage(eq(CHAIN_TASK_ID), any());
 
         when(preComputeAppRunner.createPreComputeApp(CHAIN_TASK_ID)).thenReturn(preComputeApp);
