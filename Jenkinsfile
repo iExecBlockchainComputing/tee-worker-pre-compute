@@ -1,4 +1,4 @@
-@Library('global-jenkins-library@feature/add-build-gramine') _
+@Library('global-jenkins-library@2.5.0') _
 
 String repositoryName = 'tee-worker-pre-compute'
 
