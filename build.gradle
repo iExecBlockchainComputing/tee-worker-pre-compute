@@ -9,21 +9,24 @@
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     id 'application'
+    id 'io.freefair.lombok' version '6.6.1'
     id 'jacoco'
     id 'org.sonarqube' version '3.3'
-    id 'com.palantir.docker' version '0.26.0'
-    id 'com.github.johnrengelman.shadow' version '6.1.0'
-    id 'io.freefair.lombok' version '5.3.0'
+    id 'maven-publish'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
 ext {
-    gitBranch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
-    ociImageBase = 'nexus.intra.iex.ec/' + rootProject.name
+    ociImageBase = 'local/' + rootProject.name
     ociImageName = ociImageBase + ':dev'
     ociTeeImageName = ociImageBase + '-unlocked:dev'
     jarPathForOCI = relativePath(tasks.shadowJar.outputs.files.singleFile)
     mockitoVersion = '4.4.0'
     systemStubsVersion = '2.0.1'
+}
+
+if (!project.hasProperty('gitBranch')) {
+    ext.gitBranch = 'git rev-parse --abbrev-ref HEAD'.execute().text.trim()
 }
 
 if (gitBranch != 'main' && gitBranch != 'master' && !(gitBranch ==~ '(release|hotfix|support)/.*')) {
@@ -35,6 +38,13 @@ repositories {
     mavenCentral()
     // iExec
     maven {
+        url "https://docker-regis-adm.iex.ec/repository/maven-public/"
+        credentials {
+            username nexusUser
+            password nexusPassword
+        }
+    }
+    maven {
         url "https://nexus.intra.iex.ec/repository/maven-public/"
     }
     maven {
@@ -45,6 +55,9 @@ repositories {
 dependencies {
     // iexec
     implementation "com.iexec.common:iexec-common:$iexecCommonVersion"
+
+    // apache commons.lang3
+    implementation 'org.apache.commons:commons-lang3:3.12.0'
 
     // test
     testImplementation 'org.junit.jupiter:junit-jupiter:5.7.0'
@@ -63,11 +76,17 @@ sourceSets {
     }
 }
 
-tasks.withType(Tar) {
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(11))
+    }
+}
+
+tasks.withType(Tar).configureEach {
     enabled = false
 }
 
-tasks.withType(Test) {
+tasks.withType(Test).configureEach {
     finalizedBy jacocoTestReport
     useJUnitPlatform()
 }
@@ -78,7 +97,7 @@ jacoco {
 // sonarqube code coverage requires jacoco XML report
 jacocoTestReport {
     reports {
-        xml.enabled true
+        xml.required = true
     }
 }
 tasks.sonarqube.dependsOn tasks.jacocoTestReport
@@ -100,38 +119,27 @@ jar {
     }
 }
 
-def app = 'app'
-def fatJar = "${app}-all.jar"
-
 // Jar with all dependencies (app-all.jar)
 shadowJar {
     mainClassName = mainClass
-    archiveBaseName.set(app)
+    archiveBaseName.set('app')
     archiveVersion.set('') // remove version from name
 }
 
-tasks.named('test') {
-    // Use junit platform for unit tests.
-    useJUnitPlatform()
-}
+ext.jarPathForOCI  = relativePath(tasks.shadowJar.outputs.files.singleFile)
 
-docker {
-    name ociImageName
-    dockerfile file('docker/Dockerfile.local')
-    files('build/libs/' + fatJar)
-    buildArgs([JAR_PATH: fatJar])
-}
-tasks.docker.dependsOn tasks.build
-
-task buildImage {
-    dependsOn tasks.docker
+task buildImage(type: Exec) {
+    group 'Build'
+    description 'Builds an OCI image from a Dockerfile.'
+    dependsOn shadowJar
+    commandLine 'docker', 'build', '--build-arg', 'jar=' + jarPathForOCI, '-t', ociImageName, '.'
 }
 
 task buildTeeImage(type: Exec) {
     dependsOn buildImage
-    commandLine("sh", "-c", "IMG_FROM=$ociImageName IMG_TO=$ociTeeImageName " +
-            "./docker/sconify.sh " +
-            "&& docker run -e SCONE_HASH=1 $ociTeeImageName")
+    environment 'IMG_FROM', ociImageName
+    environment 'IMG_TO', ociTeeImageName
+    commandLine 'docker/sconify.sh'
 }
 
 task itest(type: Test) {
