@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 ### Bug Fixes
 ### Quality
 ### Dependency Upgrades
+- Upgrade to `iexec-common` 8.0.0. (#54)
+- Add new `iexec-commons-poco` 1.0.2 dependency. (#54)
 
 ## [[8.0.0]](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/releases/tag/v8.0.0) 2023-03-08
 
