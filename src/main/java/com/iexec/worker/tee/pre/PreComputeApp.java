@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package com.iexec.worker.tee.pre;
 import com.iexec.common.replicate.ReplicateStatusCause;
 import com.iexec.common.security.CipherUtils;
 import com.iexec.common.utils.FileHelper;
-import com.iexec.common.utils.HashUtils;
+import com.iexec.commons.poco.utils.HashUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
