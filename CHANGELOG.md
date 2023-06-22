@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [[8.1.1]](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/releases/tag/v8.1.1) 2023-06-22
+
+### Features
+-  Retry dataset download on several IPFS gateways. (#58)
+### Dependency Upgrades
+- Upgrade to `iexec-commons-poco` 3.0.3. (#58)
+
 ## [[8.1.0]](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/releases/tag/v8.1.0) 2023-06-06
 
 ### Dependency Upgrades
