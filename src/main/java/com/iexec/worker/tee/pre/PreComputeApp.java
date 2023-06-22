@@ -40,7 +40,7 @@ public class PreComputeApp {
      * Download, decrypt, and save the plain dataset file in "/iexec_in".
      * If the decrypted file is an archive, it won't be extracted.
      * 
-     * @throws PreComputeException
+     * @throws PreComputeException if dataset or input files could not be made available for the application enclave
      */
     void run() throws PreComputeException {
         preComputeArgs = PreComputeArgs.readArgs(chainTaskId);
@@ -74,8 +74,7 @@ public class PreComputeApp {
      * Download encrypted dataset file and check its checksum.
      * 
      * @return downloaded file bytes
-     * @throws PreComputeException if download fails or bad file
-     * checksum
+     * @throws PreComputeException if download fails or bad file checksum
      */
     byte[] downloadEncryptedDataset() throws PreComputeException {
         String encryptedDatasetUrl = getPreComputeArgs().getEncryptedDatasetUrl();
@@ -168,7 +167,7 @@ public class PreComputeApp {
 
     /**
      * Added for testing purpose.
-     * @return
+     * @return A {@link PreComputeArgs} instance
      */
     PreComputeArgs getPreComputeArgs() {
         return preComputeArgs;
