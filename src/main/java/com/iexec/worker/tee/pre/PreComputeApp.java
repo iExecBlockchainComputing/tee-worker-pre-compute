@@ -20,6 +20,7 @@ import com.iexec.common.replicate.ReplicateStatusCause;
 import com.iexec.common.security.CipherUtils;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.commons.poco.utils.HashUtils;
+import com.iexec.commons.poco.utils.MultiAddressHelper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -80,7 +81,18 @@ public class PreComputeApp {
         String encryptedDatasetUrl = getPreComputeArgs().getEncryptedDatasetUrl();
         log.info("Downloading encrypted dataset file [chainTaskId:{}, url:{}]",
                 chainTaskId, encryptedDatasetUrl);
-        byte[] encryptedContent = FileHelper.readFileBytesFromUrl(encryptedDatasetUrl);
+        byte[] encryptedContent = null;
+        if (MultiAddressHelper.isMultiAddress(encryptedDatasetUrl)) {
+            for (String ipfsGateway : MultiAddressHelper.IPFS_GATEWAYS) {
+                log.debug("Try to download dataset from {}", ipfsGateway);
+                encryptedContent = FileHelper.readFileBytesFromUrl(encryptedDatasetUrl);
+                if (encryptedContent != null) {
+                    break;
+                }
+            }
+        } else {
+            encryptedContent = FileHelper.readFileBytesFromUrl(encryptedDatasetUrl);
+        }
         if (encryptedContent == null) {
             log.error("Failed to download encrypted dataset file [chainTaskId:{}, url:{}]",
                     chainTaskId, encryptedDatasetUrl);
