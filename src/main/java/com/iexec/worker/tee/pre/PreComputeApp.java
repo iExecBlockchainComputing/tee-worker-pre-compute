@@ -20,6 +20,7 @@ import com.iexec.common.replicate.ReplicateStatusCause;
 import com.iexec.common.security.CipherUtils;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.commons.poco.utils.HashUtils;
+import com.iexec.commons.poco.utils.MultiAddressHelper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -39,7 +40,7 @@ public class PreComputeApp {
      * Download, decrypt, and save the plain dataset file in "/iexec_in".
      * If the decrypted file is an archive, it won't be extracted.
      * 
-     * @throws PreComputeException
+     * @throws PreComputeException if dataset or input files could not be made available for the application enclave
      */
     void run() throws PreComputeException {
         preComputeArgs = PreComputeArgs.readArgs(chainTaskId);
@@ -73,14 +74,24 @@ public class PreComputeApp {
      * Download encrypted dataset file and check its checksum.
      * 
      * @return downloaded file bytes
-     * @throws PreComputeException if download fails or bad file
-     * checksum
+     * @throws PreComputeException if download fails or bad file checksum
      */
     byte[] downloadEncryptedDataset() throws PreComputeException {
         String encryptedDatasetUrl = getPreComputeArgs().getEncryptedDatasetUrl();
         log.info("Downloading encrypted dataset file [chainTaskId:{}, url:{}]",
                 chainTaskId, encryptedDatasetUrl);
-        byte[] encryptedContent = FileHelper.readFileBytesFromUrl(encryptedDatasetUrl);
+        byte[] encryptedContent = null;
+        if (MultiAddressHelper.isMultiAddress(encryptedDatasetUrl)) {
+            for (String ipfsGateway : MultiAddressHelper.IPFS_GATEWAYS) {
+                log.debug("Try to download dataset from {}", ipfsGateway);
+                encryptedContent = FileHelper.readFileBytesFromUrl(encryptedDatasetUrl);
+                if (encryptedContent != null) {
+                    break;
+                }
+            }
+        } else {
+            encryptedContent = FileHelper.readFileBytesFromUrl(encryptedDatasetUrl);
+        }
         if (encryptedContent == null) {
             log.error("Failed to download encrypted dataset file [chainTaskId:{}, url:{}]",
                     chainTaskId, encryptedDatasetUrl);
@@ -156,7 +167,7 @@ public class PreComputeApp {
 
     /**
      * Added for testing purpose.
-     * @return
+     * @return A {@link PreComputeArgs} instance
      */
     PreComputeArgs getPreComputeArgs() {
         return preComputeArgs;
