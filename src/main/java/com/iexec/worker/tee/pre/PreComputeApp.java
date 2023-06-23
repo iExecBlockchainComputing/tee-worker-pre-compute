@@ -84,7 +84,7 @@ public class PreComputeApp {
         if (MultiAddressHelper.isMultiAddress(encryptedDatasetUrl)) {
             for (String ipfsGateway : MultiAddressHelper.IPFS_GATEWAYS) {
                 log.debug("Try to download dataset from {}", ipfsGateway);
-                encryptedContent = FileHelper.readFileBytesFromUrl(encryptedDatasetUrl);
+                encryptedContent = FileHelper.readFileBytesFromUrl(ipfsGateway + encryptedDatasetUrl);
                 if (encryptedContent != null) {
                     break;
                 }

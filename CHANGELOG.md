@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [[8.1.3]](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/releases/tag/v8.1.3) 2023-06-23
+
+### Bug Fixes
+- Add missing `ipfsGateway` URL in dataset download URL. (#60)
+
 ## [[8.1.2]](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/releases/tag/v8.1.2) 2023-06-23
 
 ### Dependency Upgrades
