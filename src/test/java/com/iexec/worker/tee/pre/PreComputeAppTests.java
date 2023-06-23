@@ -22,11 +22,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.MockedStatic;
 import org.mockito.MockitoAnnotations;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.io.File;
+import java.net.URL;
 import java.util.List;
 
 import static com.iexec.common.precompute.PreComputeUtils.*;
@@ -48,7 +50,9 @@ class PreComputeAppTests {
 
     private static final String CHAIN_TASK_ID = "0xabc";
     private static final String DATASET_FILENAME = "my-dataset";
-    private static final String DATASET_URL = REPO_URL + "encrypted-data.bin";
+    private static final String DATASET_RESOURCE_NAME = "encrypted-data.bin";
+    private static final String HTTP_DATASET_URL = REPO_URL + DATASET_RESOURCE_NAME;
+    private static final String IPFS_DATASET_URL = "/ipfs/QmUbh7ugQ9WVprTVYjzrCS4d9cCy73zUz4MMchsrqzzu1w";
     private static final String DATASET_CHECKSUM =
             "0x02a12ef127dcfbdb294a090c8f0b69a0ca30b7940fc36cabf971f488efd374d7";
     private static final String RESOURCES = "src/test/resources/";
@@ -77,7 +81,7 @@ class PreComputeAppTests {
                  IEXEC_TASK_ID, CHAIN_TASK_ID,
                  IEXEC_PRE_COMPUTE_OUT, outputDir.getAbsolutePath(),
                  IS_DATASET_REQUIRED, true,
-                 IEXEC_DATASET_URL, DATASET_URL,
+                 IEXEC_DATASET_URL, HTTP_DATASET_URL,
                  IEXEC_DATASET_KEY, FileHelper.readFile(KEY_FILE),
                  IEXEC_DATASET_CHECKSUM, DATASET_CHECKSUM,
                  IEXEC_DATASET_FILENAME, DATASET_FILENAME,
@@ -114,22 +118,24 @@ class PreComputeAppTests {
 
          assertDoesNotThrow(() -> preComputeApp.run());
 
-         verify(preComputeApp, times(0)).downloadEncryptedDataset();
-         verify(preComputeApp, times(0)).decryptDataset(any());
-         verify(preComputeApp, times(0)).savePlainDatasetFile(any());
+         verify(preComputeApp, never()).downloadEncryptedDataset();
+         verify(preComputeApp, never()).decryptDataset(any());
+         verify(preComputeApp, never()).savePlainDatasetFile(any());
      }
      //endregion
 
     @Test
     void shouldFindOutputFolder() {
-        doReturn(goodPreComputeArgs()).when(preComputeApp).getPreComputeArgs();
+        final PreComputeArgs preComputeArgs = getPreComputeArgsBuilder(HTTP_DATASET_URL).build();
+        doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
         assertDoesNotThrow(() -> preComputeApp.checkOutputFolder());
     }
 
     @Test
     void shouldThrowSinceOutputFolderNotFound() {
-        PreComputeArgs preComputeArgs = goodPreComputeArgs();
-        preComputeArgs.setOutputDir("bad-output-dir-path");
+        final PreComputeArgs preComputeArgs = getPreComputeArgsBuilder(HTTP_DATASET_URL)
+                .outputDir("bad-output-dir-path")
+                .build();
         doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
         PreComputeException e = assertThrows(
                 PreComputeException.class,
@@ -139,16 +145,18 @@ class PreComputeAppTests {
 
     @Test
     void shouldDownloadEncryptedDataset() throws Exception {
-        doReturn(goodPreComputeArgs()).when(preComputeApp).getPreComputeArgs();
+        final PreComputeArgs preComputeArgs = getPreComputeArgsBuilder(HTTP_DATASET_URL).build();
+        doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
         byte[] actualContent = preComputeApp.downloadEncryptedDataset();
-        byte[] expectedContent = FileHelper.readFileBytesFromUrl(DATASET_URL);
+        byte[] expectedContent = FileHelper.readFileBytesFromUrl(HTTP_DATASET_URL);
         assertThat(actualContent).isEqualTo(expectedContent);
     }
 
     @Test
     void shouldThrowSinceDownloadFailed() {
-        PreComputeArgs preComputeArgs = goodPreComputeArgs();
-        preComputeArgs.setEncryptedDatasetUrl("http://bad-url");
+        final PreComputeArgs preComputeArgs = getPreComputeArgsBuilder(HTTP_DATASET_URL)
+                .encryptedDatasetUrl("http://bad-url")
+                .build();
         doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
         PreComputeException e = assertThrows(
                 PreComputeException.class,
@@ -157,9 +165,75 @@ class PreComputeAppTests {
     }
 
     @Test
+    void shouldDownloadEncryptedDatasetFromIexecGateway() throws PreComputeException {
+        final PreComputeArgs preComputeArgs = getPreComputeArgsBuilder(IPFS_DATASET_URL).build();
+        doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
+        final URL resourceFile = this.getClass().getClassLoader().getResource(DATASET_RESOURCE_NAME);
+        assertThat(resourceFile).isNotNull();
+        final byte[] expectedBytes = FileHelper.readAllBytes(resourceFile.getFile());
+        try (MockedStatic<FileHelper> fileHelperMock = mockStatic(FileHelper.class)) {
+            fileHelperMock.when(() -> FileHelper.readFileBytesFromUrl(anyString()))
+                    .thenReturn(expectedBytes);
+            assertThat(preComputeApp.downloadEncryptedDataset()).isNotNull();
+            fileHelperMock.verify(() -> FileHelper.readFileBytesFromUrl(anyString()), times(1));
+        }
+    }
+
+    @Test
+    void shouldDownloadEncryptedDatasetFromIpfsGateway() throws PreComputeException {
+        final PreComputeArgs preComputeArgs = getPreComputeArgsBuilder(IPFS_DATASET_URL).build();
+        doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
+        final URL resourceFile = this.getClass().getClassLoader().getResource(DATASET_RESOURCE_NAME);
+        assertThat(resourceFile).isNotNull();
+        final byte[] expectedBytes = FileHelper.readAllBytes(resourceFile.getFile());
+        try (MockedStatic<FileHelper> fileHelperMock = mockStatic(FileHelper.class)) {
+            fileHelperMock.when(() -> FileHelper.readFileBytesFromUrl(anyString()))
+                    .thenReturn(null)
+                    .thenReturn(expectedBytes);
+            assertThat(preComputeApp.downloadEncryptedDataset()).isNotNull();
+            fileHelperMock.verify(() -> FileHelper.readFileBytesFromUrl(anyString()), times(2));
+        }
+    }
+
+    @Test
+    void shouldDownloadEncryptedDatasetFromPinataGateway() throws PreComputeException {
+        final PreComputeArgs preComputeArgs = getPreComputeArgsBuilder(IPFS_DATASET_URL).build();
+        doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
+        final URL resourceFile = this.getClass().getClassLoader().getResource(DATASET_RESOURCE_NAME);
+        assertThat(resourceFile).isNotNull();
+        final byte[] expectedBytes = FileHelper.readAllBytes(resourceFile.getFile());
+        try (MockedStatic<FileHelper> fileHelperMock = mockStatic(FileHelper.class)) {
+            fileHelperMock.when(() -> FileHelper.readFileBytesFromUrl(anyString()))
+                    .thenReturn(null)
+                    .thenReturn(null)
+                    .thenReturn(expectedBytes);
+            assertThat(preComputeApp.downloadEncryptedDataset()).isNotNull();
+            fileHelperMock.verify(() -> FileHelper.readFileBytesFromUrl(anyString()), times(3));
+        }
+    }
+
+    @Test
+    void shouldNotDownloadEncryptedDatasetWhenFailureOnAllGateways() {
+        final PreComputeArgs preComputeArgs = getPreComputeArgsBuilder(IPFS_DATASET_URL).build();
+        doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
+        final URL resourceFile = this.getClass().getClassLoader().getResource(DATASET_RESOURCE_NAME);
+        assertThat(resourceFile).isNotNull();
+        try (MockedStatic<FileHelper> fileHelperMock = mockStatic(FileHelper.class)) {
+            fileHelperMock.when(() -> FileHelper.readFileBytesFromUrl(anyString()))
+                    .thenReturn(null);
+            assertThrows(
+                    PreComputeException.class,
+                    () -> preComputeApp.downloadEncryptedDataset()
+            );
+            fileHelperMock.verify(() -> FileHelper.readFileBytesFromUrl(anyString()), times(3));
+        }
+    }
+
+    @Test
     void shouldThrowSinceDatasetChecksumNotValid() {
-        PreComputeArgs preComputeArgs = goodPreComputeArgs();
-        preComputeArgs.setEncryptedDatasetChecksum("badChecksum");
+        final PreComputeArgs preComputeArgs = getPreComputeArgsBuilder(HTTP_DATASET_URL)
+                .encryptedDatasetChecksum("badChecksum")
+                .build();
         doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
         PreComputeException e = assertThrows(
                 PreComputeException.class,
@@ -169,8 +243,9 @@ class PreComputeAppTests {
 
     @Test
     void shouldDecryptDataset() throws Exception {
-        doReturn(goodPreComputeArgs()).when(preComputeApp).getPreComputeArgs();
-        byte[] encryptedData = FileHelper.readFileBytesFromUrl(DATASET_URL);
+        final PreComputeArgs preComputeArgs = getPreComputeArgsBuilder(HTTP_DATASET_URL).build();
+        doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
+        byte[] encryptedData = FileHelper.readFileBytesFromUrl(HTTP_DATASET_URL);
         byte[] expectedPlainData = FileHelper.readAllBytes(PLAIN_DATA_FILE);
         byte[] actualPlainData = preComputeApp.decryptDataset(encryptedData);
         assertThat(actualPlainData).isEqualTo(expectedPlainData);
@@ -178,10 +253,11 @@ class PreComputeAppTests {
 
     @Test
     void shouldThrowSinceDecryptionFailed() {
-        PreComputeArgs preComputeArgs = goodPreComputeArgs();
         String badKey = FileHelper.readFile(KEY_FILE).replace("A", "B");
-        preComputeArgs.setEncryptedDatasetBase64Key(badKey);
-        byte[] encryptedData = FileHelper.readFileBytesFromUrl(DATASET_URL);
+        final PreComputeArgs preComputeArgs = getPreComputeArgsBuilder(HTTP_DATASET_URL)
+                .encryptedDatasetBase64Key(badKey)
+                .build();
+        byte[] encryptedData = FileHelper.readFileBytesFromUrl(HTTP_DATASET_URL);
         doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
         PreComputeException e = assertThrows(
                 PreComputeException.class,
@@ -191,7 +267,8 @@ class PreComputeAppTests {
 
     @Test
     void shouldSavePlainDatasetFile() throws Exception {
-        doReturn(goodPreComputeArgs()).when(preComputeApp).getPreComputeArgs();
+        final PreComputeArgs preComputeArgs = getPreComputeArgsBuilder(HTTP_DATASET_URL).build();
+        doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
         byte[] plainContent = FileHelper.readAllBytes(PLAIN_DATA_FILE);
         preComputeApp.savePlainDatasetFile(plainContent);
         assertThat(new File(outputDir, DATASET_FILENAME)).exists();
@@ -199,8 +276,9 @@ class PreComputeAppTests {
 
     @Test
     void shouldThrowSinceFailedToSavePlainDataset() {
-        PreComputeArgs preComputeArgs = goodPreComputeArgs();
-        preComputeArgs.setOutputDir("/some-folder-123/not-found");
+        final PreComputeArgs preComputeArgs = getPreComputeArgsBuilder(HTTP_DATASET_URL)
+                .outputDir("/some-folder-123/not-found")
+                .build();
         doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
         PreComputeException e = assertThrows(PreComputeException.class,
                 () -> preComputeApp.savePlainDatasetFile("data".getBytes()));
@@ -209,7 +287,8 @@ class PreComputeAppTests {
 
     @Test
     void shouldDownloadInputFiles() throws Exception {
-        doReturn(goodPreComputeArgs()).when(preComputeApp).getPreComputeArgs();
+        final PreComputeArgs preComputeArgs = getPreComputeArgsBuilder(HTTP_DATASET_URL).build();
+        doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
         preComputeApp.downloadInputFiles();
         assertThat(new File(outputDir, "plain-data.txt")).exists();
         assertThat(new File(outputDir, "key.txt")).exists();
@@ -217,25 +296,25 @@ class PreComputeAppTests {
 
     @Test
     void shouldThrowSinceFailedToDownloadInputFiles() {
-        PreComputeArgs preComputeArgs = goodPreComputeArgs();
-        preComputeArgs.setInputFiles(List.of("http://bad-input-file-url"));
+        final PreComputeArgs preComputeArgs = getPreComputeArgsBuilder(HTTP_DATASET_URL)
+                .inputFiles(List.of("http://bad-input-file-url"))
+                .build();
         doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
         PreComputeException e = assertThrows(PreComputeException.class,
                 () -> preComputeApp.downloadInputFiles());
         assertThat(e.getExitCause()).isEqualTo(ReplicateStatusCause.PRE_COMPUTE_INPUT_FILE_DOWNLOAD_FAILED);
     }
 
-    private PreComputeArgs goodPreComputeArgs() {
+    private PreComputeArgs.PreComputeArgsBuilder getPreComputeArgsBuilder(String datasetUrl) {
         return PreComputeArgs.builder()
                 .chainTaskId(CHAIN_TASK_ID)
                 .outputDir(outputDir.getAbsolutePath())
                 .isDatasetRequired(true)
-                .encryptedDatasetUrl(DATASET_URL)
+                .encryptedDatasetUrl(datasetUrl)
                 .encryptedDatasetBase64Key(FileHelper.readFile(KEY_FILE))
                 .encryptedDatasetChecksum(DATASET_CHECKSUM)
                 .plainDatasetFilename(DATASET_FILENAME)
-                .inputFiles(List.of(INPUT_FILE_1_URL, INPUT_FILE_2_URL))
-                .build();
+                .inputFiles(List.of(INPUT_FILE_1_URL, INPUT_FILE_2_URL));
     }
 
 }
