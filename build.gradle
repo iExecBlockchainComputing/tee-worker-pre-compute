@@ -133,7 +133,7 @@ task buildImage(type: Exec) {
     commandLine 'docker', 'build', '--build-arg', 'jar=' + jarPathForOCI, '-t', ociImageName, '.'
 }
 
-task buildTeeImage(type: Exec) {
+task buildSconeImage(type: Exec) {
     dependsOn buildImage
     environment 'IMG_FROM', ociImageName
     environment 'IMG_TO', ociTeeImageName
