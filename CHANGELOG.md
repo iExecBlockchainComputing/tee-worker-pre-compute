@@ -7,6 +7,9 @@ All notable changes to this project will be documented in this file.
 ### Quality
 - Remove `nexus.intra.iex.ec` repository. (#62)
 - Parameterize build of TEE applications while PR is not started. This allows faster builds. (#63 #64)
+- Update `sconify.sh` script and rename `buildTeeImage` task to `buildSconeImage`. (#65)
+### Dependency Upgrades
+- Upgrade to `jenkins-library` 2.6.0. (#63)
 
 ## [[8.1.3]](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/releases/tag/v8.1.3) 2023-06-23
 
