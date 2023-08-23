@@ -119,21 +119,21 @@ shadowJar {
 
 ext.jarPathForOCI  = relativePath(tasks.shadowJar.outputs.files.singleFile)
 
-task buildImage(type: Exec) {
+tasks.register('buildImage', Exec) {
     group 'Build'
     description 'Builds an OCI image from a Dockerfile.'
     dependsOn shadowJar
     commandLine 'docker', 'build', '--build-arg', 'jar=' + jarPathForOCI, '-t', ociImageName, '.'
 }
 
-task buildSconeImage(type: Exec) {
+tasks.register('buildSconeImage', Exec) {
     dependsOn buildImage
     environment 'IMG_FROM', ociImageName
     environment 'IMG_TO', ociTeeImageName
     commandLine 'docker/sconify.sh'
 }
 
-task itest(type: Test) {
+tasks.register('itest', Test) {
     group 'Verification'
     description 'Runs the integration tests.'
     dependsOn buildImage
