@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file.
 - Update `sconify.sh` script and rename `buildTeeImage` task to `buildSconeImage`. (#65)
 - Upgrade to Gradle 8.2.1 with up-to-date plugins. (#67)
 ### Dependency Upgrades
-- Upgrade to `jenkins-library` 2.6.0. (#63)
+- Upgrade to `jenkins-library` 2.7.3. (#63 #68)
 - Upgrade to `eclipse-temurin` 11.0.20. (#66)
 
 ## [[8.1.3]](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/releases/tag/v8.1.3) 2023-06-23
