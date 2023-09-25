@@ -22,7 +22,7 @@ import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.iexec.common.utils.IexecEnvUtils.IEXEC_TASK_ID;
-import static com.iexec.worker.compute.pre.worker.WorkerApiManager.getWorkerApiClient;
+import static com.iexec.worker.api.WorkerApiManager.getWorkerApiClient;
 
 @Slf4j
 public class PreComputeAppRunner {
