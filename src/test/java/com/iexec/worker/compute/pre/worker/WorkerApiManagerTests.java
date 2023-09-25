@@ -1,4 +1,4 @@
-package com.iexec.worker.tee.pre.worker;
+package com.iexec.worker.compute.pre.worker;
 
 import org.junit.jupiter.api.Test;
 

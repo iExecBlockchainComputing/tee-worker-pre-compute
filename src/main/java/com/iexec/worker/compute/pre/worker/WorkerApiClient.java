@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.worker.tee.pre.worker;
+package com.iexec.worker.compute.pre.worker;
 
 import com.iexec.common.worker.api.ExitMessage;
 import feign.Param;

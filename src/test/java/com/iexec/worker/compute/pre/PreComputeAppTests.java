@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.worker.tee.pre;
+package com.iexec.worker.compute.pre;
 
 import com.iexec.common.replicate.ReplicateStatusCause;
 import com.iexec.common.utils.FileHelper;

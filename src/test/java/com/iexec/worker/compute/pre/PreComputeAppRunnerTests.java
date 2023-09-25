@@ -1,8 +1,8 @@
-package com.iexec.worker.tee.pre;
+package com.iexec.worker.compute.pre;
 
 import com.iexec.common.replicate.ReplicateStatusCause;
-import com.iexec.worker.tee.pre.worker.WorkerApiClient;
-import com.iexec.worker.tee.pre.worker.WorkerApiManager;
+import com.iexec.worker.compute.pre.worker.WorkerApiClient;
+import com.iexec.worker.compute.pre.worker.WorkerApiManager;
 import feign.FeignException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.iexec.worker.tee.pre;
+package com.iexec.worker.compute.pre;
 
 import com.iexec.common.replicate.ReplicateStatusCause;
 import com.iexec.common.worker.api.ExitMessage;
@@ -22,7 +22,7 @@ import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.iexec.common.utils.IexecEnvUtils.IEXEC_TASK_ID;
-import static com.iexec.worker.tee.pre.worker.WorkerApiManager.getWorkerApiClient;
+import static com.iexec.worker.compute.pre.worker.WorkerApiManager.getWorkerApiClient;
 
 @Slf4j
 public class PreComputeAppRunner {
