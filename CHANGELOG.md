@@ -14,6 +14,8 @@ All notable changes to this project will be documented in this file.
 ### Dependency Upgrades
 - Upgrade to `jenkins-library` 2.7.3. (#63 #68)
 - Upgrade to `eclipse-temurin` 11.0.20. (#66)
+- Upgrade to `iexec-commons-poco` 3.1.0. (#70)
+- Upgrade to `iexec-common` 8.3.0. (#70)
 
 ## [[8.1.3]](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/releases/tag/v8.1.3) 2023-06-23
 
