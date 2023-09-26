@@ -101,13 +101,13 @@ tasks.sonarqube.dependsOn tasks.jacocoTestReport
 //gradle run
 application {
     // Define the main class for the application.
-    mainClass.set('com.iexec.worker.tee.pre.Main')
+    mainClass.set('com.iexec.worker.compute.pre.Main')
 }
 
 // Jar with missing dependencies (app.jar)
 jar {
     manifest {
-        attributes 'Main-Class': 'com.iexec.worker.tee.pre.Main'
+        attributes 'Main-Class': 'com.iexec.worker.compute.pre.Main'
     }
 }
 
