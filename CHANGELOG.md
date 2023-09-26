@@ -9,6 +9,8 @@ All notable changes to this project will be documented in this file.
 - Parameterize build of TEE applications while PR is not started. This allows faster builds. (#63 #64)
 - Update `sconify.sh` script and rename `buildTeeImage` task to `buildSconeImage`. (#65)
 - Upgrade to Gradle 8.2.1 with up-to-date plugins. (#67)
+- Rename base package to `com.iexec.worker.compute.pre`. (#69)
+- Rename worker REST api package to `com.iexec.worker.api`. (#69)
 ### Dependency Upgrades
 - Upgrade to `jenkins-library` 2.7.3. (#63 #68)
 - Upgrade to `eclipse-temurin` 11.0.20. (#66)
