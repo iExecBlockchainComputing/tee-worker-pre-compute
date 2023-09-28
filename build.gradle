@@ -9,11 +9,11 @@
 plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     id 'application'
-    id 'io.freefair.lombok' version '6.6.1'
+    id 'io.freefair.lombok' version '8.2.2'
     id 'jacoco'
-    id 'org.sonarqube' version '3.3'
+    id 'org.sonarqube' version '4.2.1.3168'
     id 'maven-publish'
-    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 ext {
@@ -45,9 +45,6 @@ repositories {
         }
     }
     maven {
-        url "https://nexus.intra.iex.ec/repository/maven-public/"
-    }
-    maven {
         url "https://jitpack.io"
     }
 }
@@ -62,6 +59,7 @@ dependencies {
 
     // test
     testImplementation 'org.junit.jupiter:junit-jupiter:5.7.0'
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation 'org.assertj:assertj-core:3.18.1'
     testImplementation "uk.org.webcompere:system-stubs-core:$systemStubsVersion"    // activates env var setting
     testImplementation "uk.org.webcompere:system-stubs-jupiter:$systemStubsVersion" // activates env var setting
@@ -92,9 +90,6 @@ tasks.withType(Test).configureEach {
     useJUnitPlatform()
 }
 
-jacoco {
-    toolVersion = "0.8.7"
-}
 // sonarqube code coverage requires jacoco XML report
 jacocoTestReport {
     reports {
@@ -103,47 +98,42 @@ jacocoTestReport {
 }
 tasks.sonarqube.dependsOn tasks.jacocoTestReport
 
-def mainClass = 'com.iexec.worker.tee.pre.Main'
-
 //gradle run
 application {
     // Define the main class for the application.
-    mainClass = mainClass
+    mainClass.set('com.iexec.worker.compute.pre.Main')
 }
 
 // Jar with missing dependencies (app.jar)
 jar {
     manifest {
-        attributes(
-                'Main-Class': mainClass
-        )
+        attributes 'Main-Class': 'com.iexec.worker.compute.pre.Main'
     }
 }
 
 // Jar with all dependencies (app-all.jar)
 shadowJar {
-    mainClassName = mainClass
     archiveBaseName.set('app')
     archiveVersion.set('') // remove version from name
 }
 
 ext.jarPathForOCI  = relativePath(tasks.shadowJar.outputs.files.singleFile)
 
-task buildImage(type: Exec) {
+tasks.register('buildImage', Exec) {
     group 'Build'
     description 'Builds an OCI image from a Dockerfile.'
     dependsOn shadowJar
     commandLine 'docker', 'build', '--build-arg', 'jar=' + jarPathForOCI, '-t', ociImageName, '.'
 }
 
-task buildTeeImage(type: Exec) {
+tasks.register('buildSconeImage', Exec) {
     dependsOn buildImage
     environment 'IMG_FROM', ociImageName
     environment 'IMG_TO', ociTeeImageName
     commandLine 'docker/sconify.sh'
 }
 
-task itest(type: Test) {
+tasks.register('itest', Test) {
     group 'Verification'
     description 'Runs the integration tests.'
     dependsOn buildImage

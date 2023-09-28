@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [[8.2.0]](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/releases/tag/v8.2.0) 2023-09-28
+
+### Quality
+- Remove `nexus.intra.iex.ec` repository. (#62)
+- Parameterize build of TEE applications while PR is not started. This allows faster builds. (#63 #64)
+- Update `sconify.sh` script and rename `buildTeeImage` task to `buildSconeImage`. (#65)
+- Upgrade to Gradle 8.2.1 with up-to-date plugins. (#67)
+- Rename base package to `com.iexec.worker.compute.pre`. (#69)
+- Rename worker REST api package to `com.iexec.worker.api`. (#69)
+### Dependency Upgrades
+- Upgrade to `jenkins-library` 2.7.3. (#63 #68)
+- Upgrade to `eclipse-temurin` 11.0.20. (#66)
+- Upgrade to `iexec-commons-poco` 3.1.0. (#70)
+- Upgrade to `iexec-common` 8.3.0. (#70)
+
 ## [[8.1.3]](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/releases/tag/v8.1.3) 2023-06-23
 
 ### Bug Fixes
