@@ -8,6 +8,8 @@ All notable changes to this project will be documented in this file.
 
 - Upgrade to `eclipse-temurin:11.0.21_9-jre-focal`. (#74)
 - Upgrade to `jenkins-library` 2.7.4. (#73)
+- Upgrade to `iexec-commons-poco` 3.2.0. (#75)
+- Upgrade to `iexec-common` 8.3.1. (#75)
 
 ## [[8.2.0]](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/releases/tag/v8.2.0) 2023-09-28
 
