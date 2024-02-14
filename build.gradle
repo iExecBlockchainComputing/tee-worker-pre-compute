@@ -138,7 +138,6 @@ tasks.register('buildSconeImage', Exec) {
 tasks.register('itest', Test) {
     group 'Verification'
     description 'Runs the integration tests.'
-    dependsOn buildImage
     testClassesDirs = sourceSets.itest.output.classesDirs
     classpath = sourceSets.itest.runtimeClasspath
 }
