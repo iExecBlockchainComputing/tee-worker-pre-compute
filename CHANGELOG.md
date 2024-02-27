@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Dependency Upgrades
 
 - Upgrade to scone 5.7.6. (#78)
+- Upgrade to `iexec-common` 8.4.0. (#79)
 
 ## [[8.3.0]](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/releases/tag/v8.3.0) 2024-01-12
 
