@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 ## [[NEXT]](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/releases/tag/vNEXT) 2024
 
-### New Features
+### Dependency Upgrades
 
 - Upgrade to scone 5.7.6. (#78)
 
