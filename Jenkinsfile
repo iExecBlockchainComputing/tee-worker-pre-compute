@@ -28,5 +28,5 @@ sconeBuildUnlocked(
         imageName:       repositoryName,
         imageTag:        buildInfo.imageTag,
         sconifyArgsPath: './docker/sconify.args',
-        sconifyVersion:  '5.7.1'
+        sconifyVersion:  '5.7.6'
 )
