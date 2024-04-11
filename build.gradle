@@ -56,23 +56,6 @@ dependencies {
 
     // apache commons.lang3
     implementation 'org.apache.commons:commons-lang3:3.12.0'
-
-    // test
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.7.0'
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    testImplementation 'org.assertj:assertj-core:3.18.1'
-    testImplementation "uk.org.webcompere:system-stubs-core:$systemStubsVersion"    // activates env var setting
-    testImplementation "uk.org.webcompere:system-stubs-jupiter:$systemStubsVersion" // activates env var setting
-    testImplementation "org.mockito:mockito-core:$mockitoVersion"
-    testImplementation "org.mockito:mockito-junit-jupiter:$mockitoVersion"
-    testImplementation "org.mockito:mockito-inline:$mockitoVersion" // activates mocking final classes/methods
-}
-
-sourceSets {
-    itest {
-        compileClasspath += sourceSets.main.output
-        runtimeClasspath += sourceSets.main.output
-    }
 }
 
 java {
@@ -87,9 +70,25 @@ tasks.withType(Tar).configureEach {
     enabled = false
 }
 
+testing {
+    suites {
+        test {
+            useJUnitJupiter()
+            dependencies {
+                implementation 'org.junit.jupiter:junit-jupiter:5.7.0'
+                implementation 'org.assertj:assertj-core:3.18.1'
+                implementation "uk.org.webcompere:system-stubs-core:$systemStubsVersion"    // activates env var setting
+                implementation "uk.org.webcompere:system-stubs-jupiter:$systemStubsVersion" // activates env var setting
+                implementation "org.mockito:mockito-core:$mockitoVersion"
+                implementation "org.mockito:mockito-junit-jupiter:$mockitoVersion"
+                implementation "org.mockito:mockito-inline:$mockitoVersion" // activates mocking final classes/methods
+            }
+        }
+    }
+}
+
 tasks.withType(Test).configureEach {
     finalizedBy jacocoTestReport
-    useJUnitPlatform()
 }
 
 // sonarqube code coverage requires jacoco XML report
@@ -119,7 +118,7 @@ shadowJar {
     archiveVersion.set('') // remove version from name
 }
 
-ext.jarPathForOCI  = relativePath(tasks.shadowJar.outputs.files.singleFile)
+ext.jarPathForOCI = relativePath(tasks.shadowJar.outputs.files.singleFile)
 
 tasks.register('buildImage', Exec) {
     group 'Build'
@@ -138,7 +137,4 @@ tasks.register('buildSconeImage', Exec) {
 tasks.register('itest', Test) {
     group 'Verification'
     description 'Runs the integration tests.'
-    dependsOn buildImage
-    testClassesDirs = sourceSets.itest.output.classesDirs
-    classpath = sourceSets.itest.runtimeClasspath
 }
