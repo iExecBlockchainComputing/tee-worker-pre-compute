@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 ### Dependency Upgrades
 
 - Upgrade to Gradle 8.7. (#83)
+- Upgrade to `eclipse-temurin:11.0.22_7-jre-focal`. (#84)
 
 ## [[8.4.0]](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/releases/tag/v8.4.0) 2024-02-29
 
