@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [[NEXT]](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/releases/tag/vNEXT) 2024
 
+### New Features
+
+- Use new `FileHashUtils` API. (#90)
+
 ### Dependency Upgrades
 
 - Upgrade to `eclipse-temurin:11.0.24_8-jre-focal`. (#88)
