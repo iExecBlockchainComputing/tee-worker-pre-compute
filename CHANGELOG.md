@@ -8,6 +8,10 @@ All notable changes to this project will be documented in this file.
 
 - Use new `FileHashUtils` API. (#90)
 
+### Quality
+
+- Keep `itest` task empty in `build.gradle` to avoid a warning during build. (#91)
+
 ### Dependency Upgrades
 
 - Upgrade to `eclipse-temurin:11.0.24_8-jre-focal`. (#88)

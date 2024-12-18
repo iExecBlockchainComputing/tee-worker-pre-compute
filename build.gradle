@@ -91,6 +91,11 @@ tasks.withType(Test).configureEach {
     finalizedBy jacocoTestReport
 }
 
+tasks.register('itest') {
+    group 'Verification'
+    description 'Runs the integration tests.'
+}
+
 // sonarqube code coverage requires jacoco XML report
 jacocoTestReport {
     reports {
@@ -132,9 +137,4 @@ tasks.register('buildSconeImage', Exec) {
     environment 'IMG_FROM', ociImageName
     environment 'IMG_TO', ociTeeImageName
     commandLine 'docker/sconify.sh'
-}
-
-tasks.register('itest', Test) {
-    group 'Verification'
-    description 'Runs the integration tests.'
 }
