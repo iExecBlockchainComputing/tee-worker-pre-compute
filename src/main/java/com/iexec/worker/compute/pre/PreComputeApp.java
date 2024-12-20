@@ -18,6 +18,7 @@ package com.iexec.worker.compute.pre;
 
 import com.iexec.common.replicate.ReplicateStatusCause;
 import com.iexec.common.security.CipherUtils;
+import com.iexec.common.utils.FileHashUtils;
 import com.iexec.common.utils.FileHelper;
 import com.iexec.commons.poco.utils.HashUtils;
 import com.iexec.commons.poco.utils.MultiAddressHelper;
@@ -39,7 +40,7 @@ public class PreComputeApp {
     /**
      * Download, decrypt, and save the plain dataset file in "/iexec_in".
      * If the decrypted file is an archive, it won't be extracted.
-     * 
+     *
      * @throws PreComputeException if dataset or input files could not be made available for the application enclave
      */
     void run() throws PreComputeException {
@@ -55,7 +56,7 @@ public class PreComputeApp {
 
     /**
      * Check that output folder (/iexec_in) folder exists.
-     * 
+     *
      * @throws PreComputeException if output folder not found
      */
     void checkOutputFolder() throws PreComputeException {
@@ -72,7 +73,7 @@ public class PreComputeApp {
 
     /**
      * Download encrypted dataset file and check its checksum.
-     * 
+     *
      * @return downloaded file bytes
      * @throws PreComputeException if download fails or bad file checksum
      */
@@ -110,7 +111,7 @@ public class PreComputeApp {
 
     /**
      * Decrypt dataset content.
-     * 
+     *
      * @param encryptedContent bytes
      * @return plain dataset content bytes
      * @throws PreComputeException if decryption fails
@@ -132,7 +133,7 @@ public class PreComputeApp {
      * Save plain dataset content in output folder (iexec_in).
      * The created file will have the name provided in the env
      * variable IEXEC_DATASET_FILENAME.
-     * 
+     *
      * @param plainContent bytes
      * @throws PreComputeException if saving the file fails
      */
@@ -152,14 +153,14 @@ public class PreComputeApp {
     /**
      * Download files and save them in the output folder (iexec_in)
      * if the list is not empty.
-     * 
-     * @throws PreComputeException if download of one of the
-     * files fails
+     *
+     * @throws PreComputeException if download of one of the files fails
      */
     void downloadInputFiles() throws PreComputeException {
         for (String url : getPreComputeArgs().getInputFiles()) {
             log.info("Downloading input file [chainTaskId:{}, url:{}]", chainTaskId, url);
-            if (FileHelper.downloadFile(url, getPreComputeArgs().getOutputDir()).isEmpty()) {
+            if (FileHelper.downloadFile(url, getPreComputeArgs().getOutputDir(), FileHashUtils.createFileNameFromUri(url))
+                    .isEmpty()) {
                 throw new PreComputeException(ReplicateStatusCause.PRE_COMPUTE_INPUT_FILE_DOWNLOAD_FAILED);
             }
         }
@@ -167,6 +168,7 @@ public class PreComputeApp {
 
     /**
      * Added for testing purpose.
+     *
      * @return A {@link PreComputeArgs} instance
      */
     PreComputeArgs getPreComputeArgs() {

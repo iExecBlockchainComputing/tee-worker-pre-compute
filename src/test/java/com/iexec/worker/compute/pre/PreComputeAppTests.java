@@ -17,13 +17,14 @@
 package com.iexec.worker.compute.pre;
 
 import com.iexec.common.replicate.ReplicateStatusCause;
+import com.iexec.common.utils.FileHashUtils;
 import com.iexec.common.utils.FileHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
@@ -42,6 +43,7 @@ import static org.mockito.Mockito.*;
  * This is a primary validation test for
  * pre-compute execution.
  */
+@ExtendWith(MockitoExtension.class)
 @ExtendWith(SystemStubsExtension.class)
 class PreComputeAppTests {
 
@@ -70,59 +72,58 @@ class PreComputeAppTests {
 
     @BeforeEach
     void beforeEach() {
-        MockitoAnnotations.openMocks(this);
         preComputeApp = spy(new PreComputeApp(CHAIN_TASK_ID));
     }
 
     //region run
-     @Test
-     void shouldRunSuccessfullyWithDataset(EnvironmentVariables environment) throws PreComputeException {
-         environment.set(
-                 IEXEC_TASK_ID, CHAIN_TASK_ID,
-                 IEXEC_PRE_COMPUTE_OUT, outputDir.getAbsolutePath(),
-                 IS_DATASET_REQUIRED, true,
-                 IEXEC_DATASET_URL, HTTP_DATASET_URL,
-                 IEXEC_DATASET_KEY, FileHelper.readFile(KEY_FILE),
-                 IEXEC_DATASET_CHECKSUM, DATASET_CHECKSUM,
-                 IEXEC_DATASET_FILENAME, DATASET_FILENAME,
-                 IEXEC_INPUT_FILES_NUMBER, 2,
-                 IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_1_URL,
-                 IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_2_URL
-         );
+    @Test
+    void shouldRunSuccessfullyWithDataset(EnvironmentVariables environment) throws PreComputeException {
+        environment.set(
+                IEXEC_TASK_ID, CHAIN_TASK_ID,
+                IEXEC_PRE_COMPUTE_OUT, outputDir.getAbsolutePath(),
+                IS_DATASET_REQUIRED, true,
+                IEXEC_DATASET_URL, HTTP_DATASET_URL,
+                IEXEC_DATASET_KEY, FileHelper.readFile(KEY_FILE),
+                IEXEC_DATASET_CHECKSUM, DATASET_CHECKSUM,
+                IEXEC_DATASET_FILENAME, DATASET_FILENAME,
+                IEXEC_INPUT_FILES_NUMBER, 2,
+                IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_1_URL,
+                IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_2_URL
+        );
 
-         final byte[] encryptedDataset = "encryptedDataset".getBytes();
-         final byte[] plainContent = "plainContent".getBytes();
+        final byte[] encryptedDataset = "encryptedDataset".getBytes();
+        final byte[] plainContent = "plainContent".getBytes();
 
-         doNothing().when(preComputeApp).checkOutputFolder();
-         doReturn(encryptedDataset).when(preComputeApp).downloadEncryptedDataset();
-         doReturn(plainContent).when(preComputeApp).decryptDataset(encryptedDataset);
-         doNothing().when(preComputeApp).savePlainDatasetFile(plainContent);
-         doNothing().when(preComputeApp).downloadInputFiles();
+        doNothing().when(preComputeApp).checkOutputFolder();
+        doReturn(encryptedDataset).when(preComputeApp).downloadEncryptedDataset();
+        doReturn(plainContent).when(preComputeApp).decryptDataset(encryptedDataset);
+        doNothing().when(preComputeApp).savePlainDatasetFile(plainContent);
+        doNothing().when(preComputeApp).downloadInputFiles();
 
-         assertDoesNotThrow(() -> preComputeApp.run());
-     }
+        assertDoesNotThrow(() -> preComputeApp.run());
+    }
 
-     @Test
-     void shouldRunSuccessfullyWithoutDataset(EnvironmentVariables environment) throws PreComputeException {
-         environment.set(
-                 IEXEC_TASK_ID, CHAIN_TASK_ID,
-                 IEXEC_PRE_COMPUTE_OUT, outputDir.getAbsolutePath(),
-                 IS_DATASET_REQUIRED, false,
-                 IEXEC_INPUT_FILES_NUMBER, 2,
-                 IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_1_URL,
-                 IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_2_URL
-         );
+    @Test
+    void shouldRunSuccessfullyWithoutDataset(EnvironmentVariables environment) throws PreComputeException {
+        environment.set(
+                IEXEC_TASK_ID, CHAIN_TASK_ID,
+                IEXEC_PRE_COMPUTE_OUT, outputDir.getAbsolutePath(),
+                IS_DATASET_REQUIRED, false,
+                IEXEC_INPUT_FILES_NUMBER, 2,
+                IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_1_URL,
+                IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_2_URL
+        );
 
-         doNothing().when(preComputeApp).checkOutputFolder();
-         doNothing().when(preComputeApp).downloadInputFiles();
+        doNothing().when(preComputeApp).checkOutputFolder();
+        doNothing().when(preComputeApp).downloadInputFiles();
 
-         assertDoesNotThrow(() -> preComputeApp.run());
+        assertDoesNotThrow(() -> preComputeApp.run());
 
-         verify(preComputeApp, never()).downloadEncryptedDataset();
-         verify(preComputeApp, never()).decryptDataset(any());
-         verify(preComputeApp, never()).savePlainDatasetFile(any());
-     }
-     //endregion
+        verify(preComputeApp, never()).downloadEncryptedDataset();
+        verify(preComputeApp, never()).decryptDataset(any());
+        verify(preComputeApp, never()).savePlainDatasetFile(any());
+    }
+    //endregion
 
     @Test
     void shouldFindOutputFolder() {
@@ -290,8 +291,8 @@ class PreComputeAppTests {
         final PreComputeArgs preComputeArgs = getPreComputeArgsBuilder(HTTP_DATASET_URL).build();
         doReturn(preComputeArgs).when(preComputeApp).getPreComputeArgs();
         preComputeApp.downloadInputFiles();
-        assertThat(new File(outputDir, "plain-data.txt")).exists();
-        assertThat(new File(outputDir, "key.txt")).exists();
+        assertThat(new File(outputDir, FileHashUtils.createFileNameFromUri(INPUT_FILE_1_URL))).exists();
+        assertThat(new File(outputDir, FileHashUtils.createFileNameFromUri(INPUT_FILE_2_URL))).exists();
     }
 
     @Test
