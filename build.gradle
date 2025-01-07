@@ -78,9 +78,7 @@ testing {
             useJUnitJupiter()
             dependencies {
                 implementation 'org.assertj:assertj-core'
-                implementation "org.mockito:mockito-core"
                 implementation "org.mockito:mockito-junit-jupiter"
-                implementation "org.mockito:mockito-inline" // activates mocking final classes/methods
                 implementation "uk.org.webcompere:system-stubs-core:$systemStubsVersion"    // activates env var setting
                 implementation "uk.org.webcompere:system-stubs-jupiter:$systemStubsVersion" // activates env var setting
             }
