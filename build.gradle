@@ -21,7 +21,7 @@ ext {
     ociImageName = ociImageBase + ':dev'
     ociTeeImageName = ociImageBase + '-unlocked:dev'
     jarPathForOCI = relativePath(tasks.shadowJar.outputs.files.singleFile)
-    mockitoVersion = '4.4.0'
+    springBootVersion = '3.0.13'
     systemStubsVersion = '2.0.1'
 }
 
@@ -50,20 +50,22 @@ repositories {
 }
 
 dependencies {
+    implementation platform("org.springframework.boot:spring-boot-dependencies:${springBootVersion}")
+
     // iexec
     implementation "com.iexec.commons:iexec-commons-poco:$iexecCommonsPocoVersion"
     implementation "com.iexec.common:iexec-common:$iexecCommonVersion"
 
     // apache commons.lang3
-    implementation 'org.apache.commons:commons-lang3:3.12.0'
+    implementation 'org.apache.commons:commons-lang3'
 }
 
 java {
     toolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
     }
-    sourceCompatibility = "11"
-    targetCompatibility = "11"
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
 }
 
 tasks.withType(Tar).configureEach {
@@ -75,13 +77,10 @@ testing {
         test {
             useJUnitJupiter()
             dependencies {
-                implementation 'org.junit.jupiter:junit-jupiter:5.7.0'
-                implementation 'org.assertj:assertj-core:3.18.1'
+                implementation 'org.assertj:assertj-core'
+                implementation "org.mockito:mockito-junit-jupiter"
                 implementation "uk.org.webcompere:system-stubs-core:$systemStubsVersion"    // activates env var setting
                 implementation "uk.org.webcompere:system-stubs-jupiter:$systemStubsVersion" // activates env var setting
-                implementation "org.mockito:mockito-core:$mockitoVersion"
-                implementation "org.mockito:mockito-junit-jupiter:$mockitoVersion"
-                implementation "org.mockito:mockito-inline:$mockitoVersion" // activates mocking final classes/methods
             }
         }
     }
