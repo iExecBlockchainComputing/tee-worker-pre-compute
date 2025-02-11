@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [[NEXT]](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/releases/tag/vNEXT) 2025
 
+### New Features
+
+- Update build to run application in Scone framework 5.7 and 5.9 enlaves. (#96)
+
 ### Dependency Upgrades
 
 - Upgrade to `eclipse-temurin:17.0.13_11-jre-focal`. (#95)
