@@ -30,3 +30,11 @@ sconeBuildUnlocked(
         sconifyArgsPath: './docker/sconify.args',
         sconifyVersion:  '5.7.6'
 )
+
+sconeBuildUnlocked(
+        nativeImage:     "docker-regis.iex.ec/$repositoryName:$buildInfo.imageTag",
+        imageName:       repositoryName,
+        imageTag:        buildInfo.imageTag,
+        sconifyArgsPath: './docker/sconify.args',
+        sconifyVersion:  '5.9.0'
+)
