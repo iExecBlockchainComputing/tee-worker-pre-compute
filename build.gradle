@@ -21,7 +21,7 @@ ext {
     ociImageName = ociImageBase + ':dev'
     ociTeeImageName = ociImageBase + '-unlocked:dev'
     jarPathForOCI = relativePath(tasks.shadowJar.outputs.files.singleFile)
-    springBootVersion = '3.0.13'
+    springBootVersion = '3.3.8'
     systemStubsVersion = '2.0.1'
 }
 
@@ -66,6 +66,10 @@ java {
     }
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs.add('-parameters')
 }
 
 tasks.withType(Tar).configureEach {
