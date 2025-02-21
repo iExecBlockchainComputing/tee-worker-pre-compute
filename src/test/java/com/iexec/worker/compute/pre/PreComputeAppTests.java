@@ -29,7 +29,6 @@ import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
@@ -78,7 +77,7 @@ class PreComputeAppTests {
 
     //region run
     @Test
-    void shouldRunSuccessfullyWithDataset(EnvironmentVariables environment) throws PreComputeException, IOException {
+    void shouldRunSuccessfullyWithDataset(EnvironmentVariables environment) throws PreComputeException {
         environment.set(
                 IEXEC_TASK_ID, CHAIN_TASK_ID,
                 IEXEC_PRE_COMPUTE_OUT, outputDir.getAbsolutePath(),
@@ -105,7 +104,7 @@ class PreComputeAppTests {
     }
 
     @Test
-    void shouldRunSuccessfullyWithoutDataset(EnvironmentVariables environment) throws PreComputeException, IOException {
+    void shouldRunSuccessfullyWithoutDataset(EnvironmentVariables environment) throws PreComputeException {
         environment.set(
                 IEXEC_TASK_ID, CHAIN_TASK_ID,
                 IEXEC_PRE_COMPUTE_OUT, outputDir.getAbsolutePath(),

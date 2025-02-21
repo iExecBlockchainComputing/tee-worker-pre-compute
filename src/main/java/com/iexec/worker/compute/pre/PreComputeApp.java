@@ -118,7 +118,7 @@ public class PreComputeApp {
      * @return plain dataset content bytes
      * @throws PreComputeException if decryption fails
      */
-    byte[] decryptDataset(byte[] encryptedContent) throws PreComputeException, IOException {
+    byte[] decryptDataset(byte[] encryptedContent) throws PreComputeException {
         log.info("Decrypting dataset [chainTaskId:{}]", chainTaskId);
         final String key = getPreComputeArgs().getEncryptedDatasetBase64Key();
         final byte[] decodeKey = Base64.getDecoder().decode(key);
