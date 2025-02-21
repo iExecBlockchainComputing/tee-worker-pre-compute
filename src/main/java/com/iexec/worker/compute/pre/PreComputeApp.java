@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,9 @@ import com.iexec.commons.poco.utils.MultiAddressHelper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.Base64;
 
 @Slf4j
 public class PreComputeApp {
@@ -43,7 +45,7 @@ public class PreComputeApp {
      *
      * @throws PreComputeException if dataset or input files could not be made available for the application enclave
      */
-    void run() throws PreComputeException {
+    void run() throws PreComputeException, IOException {
         preComputeArgs = PreComputeArgs.readArgs(chainTaskId);
         checkOutputFolder();
         if (preComputeArgs.isDatasetRequired()) {
@@ -116,11 +118,12 @@ public class PreComputeApp {
      * @return plain dataset content bytes
      * @throws PreComputeException if decryption fails
      */
-    byte[] decryptDataset(byte[] encryptedContent) throws PreComputeException {
+    byte[] decryptDataset(byte[] encryptedContent) throws PreComputeException, IOException {
         log.info("Decrypting dataset [chainTaskId:{}]", chainTaskId);
-        String key = getPreComputeArgs().getEncryptedDatasetBase64Key();
+        final String key = getPreComputeArgs().getEncryptedDatasetBase64Key();
+        final byte[] decodeKey = Base64.getDecoder().decode(key);
         try {
-            byte[] plainDatasetContent = CipherUtils.aesDecrypt(encryptedContent, key.getBytes());
+            byte[] plainDatasetContent = CipherUtils.aesDecrypt(encryptedContent, decodeKey);
             log.info("Decrypted dataset [chainTaskId:{}]", chainTaskId);
             return plainDatasetContent;
         } catch (GeneralSecurityException e) {

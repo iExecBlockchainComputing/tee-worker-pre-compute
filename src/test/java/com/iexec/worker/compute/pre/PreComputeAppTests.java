@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
@@ -77,7 +78,7 @@ class PreComputeAppTests {
 
     //region run
     @Test
-    void shouldRunSuccessfullyWithDataset(EnvironmentVariables environment) throws PreComputeException {
+    void shouldRunSuccessfullyWithDataset(EnvironmentVariables environment) throws PreComputeException, IOException {
         environment.set(
                 IEXEC_TASK_ID, CHAIN_TASK_ID,
                 IEXEC_PRE_COMPUTE_OUT, outputDir.getAbsolutePath(),
@@ -104,7 +105,7 @@ class PreComputeAppTests {
     }
 
     @Test
-    void shouldRunSuccessfullyWithoutDataset(EnvironmentVariables environment) throws PreComputeException {
+    void shouldRunSuccessfullyWithoutDataset(EnvironmentVariables environment) throws PreComputeException, IOException {
         environment.set(
                 IEXEC_TASK_ID, CHAIN_TASK_ID,
                 IEXEC_PRE_COMPUTE_OUT, outputDir.getAbsolutePath(),
