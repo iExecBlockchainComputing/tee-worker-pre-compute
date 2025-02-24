@@ -25,8 +25,6 @@ import com.iexec.commons.poco.utils.MultiAddressHelper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.io.IOException;
-import java.security.GeneralSecurityException;
 import java.util.Base64;
 
 @Slf4j
@@ -45,7 +43,7 @@ public class PreComputeApp {
      *
      * @throws PreComputeException if dataset or input files could not be made available for the application enclave
      */
-    void run() throws PreComputeException, IOException {
+    void run() throws PreComputeException {
         preComputeArgs = PreComputeArgs.readArgs(chainTaskId);
         checkOutputFolder();
         if (preComputeArgs.isDatasetRequired()) {
@@ -120,13 +118,13 @@ public class PreComputeApp {
      */
     byte[] decryptDataset(byte[] encryptedContent) throws PreComputeException {
         log.info("Decrypting dataset [chainTaskId:{}]", chainTaskId);
-        final String key = getPreComputeArgs().getEncryptedDatasetBase64Key();
-        final byte[] decodeKey = Base64.getDecoder().decode(key);
         try {
+            final String key = getPreComputeArgs().getEncryptedDatasetBase64Key();
+            final byte[] decodeKey = Base64.getDecoder().decode(key);
             byte[] plainDatasetContent = CipherUtils.aesDecrypt(encryptedContent, decodeKey);
             log.info("Decrypted dataset [chainTaskId:{}]", chainTaskId);
             return plainDatasetContent;
-        } catch (GeneralSecurityException e) {
+        } catch (Exception e) {
             log.error("Failed to decrypt dataset [chainTaskId:{}]", chainTaskId, e);
             throw new PreComputeException(ReplicateStatusCause.PRE_COMPUTE_DATASET_DECRYPTION_FAILED);
         }
