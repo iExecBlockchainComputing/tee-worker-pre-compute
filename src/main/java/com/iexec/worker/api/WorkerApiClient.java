@@ -25,8 +25,8 @@ public interface WorkerApiClient {
 
     @RequestLine("POST /compute/pre/{chainTaskId}/exit")
     @Headers("Authorization: {authorization}")
-    void sendExitCauseForPreComputeStage(@Param("chainTaskId") String chainTaskId,
-                                         @Param("authorization") String authorization,
+    void sendExitCauseForPreComputeStage(@Param("authorization") String authorization,
+                                         @Param("chainTaskId") String chainTaskId,
                                          ExitMessage exitMessage);
 
 }

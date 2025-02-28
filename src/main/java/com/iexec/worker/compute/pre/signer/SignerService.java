@@ -17,7 +17,6 @@
 package com.iexec.worker.compute.pre.signer;
 
 import com.iexec.commons.poco.security.Signature;
-import com.iexec.commons.poco.tee.TeeEnclaveChallengeSignature;
 import com.iexec.commons.poco.utils.CredentialsUtils;
 import com.iexec.commons.poco.utils.HashUtils;
 import com.iexec.worker.compute.pre.PreComputeException;
@@ -46,11 +45,10 @@ public class SignerService {
         return enclaveChallengeSignature.getValue();
     }
 
-    public String getMessageSignature(final String message, final String chainTaskId) throws PreComputeException {
+    public String getChallenge(final String chainTaskId) throws PreComputeException {
         final String workerAddress = EnvUtils.getEnvVarOrThrow(PRE_COMPUTE_WORKER_ADDRESS, PRE_COMPUTE_WORKER_ADDRESS_MISSING);
-        final String messageSeal = HashUtils.concatenateAndHash(workerAddress, chainTaskId);
-        final String messageHash = TeeEnclaveChallengeSignature.getMessageHash(message, messageSeal);
         final String teeChallengePrivateKey = EnvUtils.getEnvVarOrThrow(PRE_COMPUTE_TEE_CHALLENGE_PRIVATE_KEY, PRE_COMPUTE_TEE_CHALLENGE_PRIVATE_KEY_MISSING);
+        final String messageHash = HashUtils.concatenateAndHash(chainTaskId, workerAddress);
         return signEnclaveChallenge(messageHash, teeChallengePrivateKey);
     }
 

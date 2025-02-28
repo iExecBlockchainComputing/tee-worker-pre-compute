@@ -60,8 +60,8 @@ public class PreComputeAppRunner {
             log.error("TEE pre-compute failed without explicit exitCause", e);
         }
         try {
-            final String signature = signerService.getMessageSignature(exitCause.toString(), chainTaskId);
-            getWorkerApiClient().sendExitCauseForPreComputeStage(chainTaskId, signature, new ExitMessage(exitCause));
+            final String authorization = signerService.getChallenge(chainTaskId);
+            getWorkerApiClient().sendExitCauseForPreComputeStage(authorization, chainTaskId, new ExitMessage(exitCause));
             return 1;
         } catch (PreComputeException e) {
             log.error("Failed to sign exitCause message [exitCause:{}]", exitCause, e);
