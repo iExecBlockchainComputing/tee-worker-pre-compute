@@ -56,6 +56,9 @@ public class PreComputeArgs {
     private String plainDatasetFilename;
     // input files
     private List<String> inputFiles;
+    // signature
+    private String workerAddress;
+    private String teeChallengePrivateKey;
 
     public static PreComputeArgs readArgs(String chainTaskId) throws PreComputeException {
         PreComputeArgs args = PreComputeArgs.builder()
@@ -63,6 +66,8 @@ public class PreComputeArgs {
                 .outputDir(getEnvVarOrThrow(IEXEC_PRE_COMPUTE_OUT))
                 .isDatasetRequired(Boolean.parseBoolean(getEnvVarOrThrow(IS_DATASET_REQUIRED)))
                 .inputFiles(new ArrayList<>())
+                .workerAddress(getEnvVarOrThrow(PRE_COMPUTE_WORKER_ADDRESS))
+                .teeChallengePrivateKey(getEnvVarOrThrow(PRE_COMPUTE_TEE_CHALLENGE_PRIVATE_KEY))
                 .build();
         if (args.isDatasetRequired()) {
             args.setEncryptedDatasetUrl(getEnvVarOrThrow(IEXEC_DATASET_URL));

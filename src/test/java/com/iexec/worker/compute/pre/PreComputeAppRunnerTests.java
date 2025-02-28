@@ -99,7 +99,7 @@ class PreComputeAppRunnerTests {
 
         WorkerApiClient workerApiClient = mock(WorkerApiClient.class);
         doThrow(FeignException.NotFound.class)
-                .when(workerApiClient).sendExitCauseForPreComputeStage(eq(CHAIN_TASK_ID), any());
+                .when(workerApiClient).sendExitCauseForPreComputeStage(eq(CHAIN_TASK_ID), any(), any());
 
         when(preComputeAppRunner.createPreComputeApp(CHAIN_TASK_ID)).thenReturn(preComputeApp);
         try (MockedStatic<WorkerApiManager> workerApiManager = Mockito.mockStatic(WorkerApiManager.class)) {

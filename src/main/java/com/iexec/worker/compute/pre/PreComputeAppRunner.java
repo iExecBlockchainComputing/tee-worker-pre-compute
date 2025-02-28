@@ -18,6 +18,7 @@ package com.iexec.worker.compute.pre;
 
 import com.iexec.common.replicate.ReplicateStatusCause;
 import com.iexec.common.worker.api.ExitMessage;
+import com.iexec.worker.compute.pre.signer.SignerService;
 import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,6 +27,8 @@ import static com.iexec.worker.api.WorkerApiManager.getWorkerApiClient;
 
 @Slf4j
 public class PreComputeAppRunner {
+
+    SignerService signerService;
 
     /**
      * Run PreComputeApp and handle possible exceptions.
@@ -57,10 +60,11 @@ public class PreComputeAppRunner {
             log.error("TEE pre-compute failed without explicit exitCause", e);
         }
         try {
-            getWorkerApiClient()
-                    .sendExitCauseForPreComputeStage(chainTaskId,
-                            new ExitMessage(exitCause));
+            final String signature = signerService.getMessageSignature(exitCause.toString(), chainTaskId);
+            getWorkerApiClient().sendExitCauseForPreComputeStage(chainTaskId, signature, new ExitMessage(exitCause));
             return 1;
+        } catch (PreComputeException e) {
+            log.error("Failed to sign exitCause message [exitCause:{}]", exitCause, e);
         } catch (FeignException e) {
             log.error("Failed to report exit exitCause [exitCause:{}]", exitCause, e);
         }

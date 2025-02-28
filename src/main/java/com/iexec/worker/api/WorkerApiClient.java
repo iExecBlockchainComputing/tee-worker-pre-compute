@@ -17,13 +17,16 @@
 package com.iexec.worker.api;
 
 import com.iexec.common.worker.api.ExitMessage;
+import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
 
 public interface WorkerApiClient {
 
     @RequestLine("POST /compute/pre/{chainTaskId}/exit")
+    @Headers("Authorization: {authorization}")
     void sendExitCauseForPreComputeStage(@Param("chainTaskId") String chainTaskId,
+                                         @Param("authorization") String authorization,
                                          ExitMessage exitMessage);
 
 }
