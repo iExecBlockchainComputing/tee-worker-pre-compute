@@ -23,6 +23,8 @@ import com.iexec.worker.compute.pre.PreComputeException;
 import com.iexec.worker.compute.pre.utils.EnvUtils;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.iexec.common.worker.tee.TeeSessionEnvironmentVariable.SIGN_TEE_CHALLENGE_PRIVATE_KEY;
+import static com.iexec.common.worker.tee.TeeSessionEnvironmentVariable.SIGN_WORKER_ADDRESS;
 import static com.iexec.commons.poco.utils.SignatureUtils.isExpectedSignerOnSignedMessageHash;
 import static com.iexec.commons.poco.utils.SignatureUtils.signMessageHashAndGetSignature;
 
@@ -46,8 +48,8 @@ public class SignerService {
     }
 
     public String getChallenge(final String chainTaskId) throws PreComputeException {
-        final String workerAddress = EnvUtils.getEnvVarOrThrow(PRE_COMPUTE_WORKER_ADDRESS, PRE_COMPUTE_WORKER_ADDRESS_MISSING);
-        final String teeChallengePrivateKey = EnvUtils.getEnvVarOrThrow(PRE_COMPUTE_TEE_CHALLENGE_PRIVATE_KEY, PRE_COMPUTE_TEE_CHALLENGE_PRIVATE_KEY_MISSING);
+        final String workerAddress = EnvUtils.getEnvVarOrThrow(SIGN_WORKER_ADDRESS.name(), SIGN_WORKER_ADDRESS_MISSING);
+        final String teeChallengePrivateKey = EnvUtils.getEnvVarOrThrow(SIGN_TEE_CHALLENGE_PRIVATE_KEY.name(), SIGN_TEE_CHALLENGE_PRIVATE_KEY_MISSING);
         final String messageHash = HashUtils.concatenateAndHash(chainTaskId, workerAddress);
         return signEnclaveChallenge(messageHash, teeChallengePrivateKey);
     }

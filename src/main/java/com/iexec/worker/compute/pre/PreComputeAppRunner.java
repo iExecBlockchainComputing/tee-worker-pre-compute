@@ -22,7 +22,7 @@ import com.iexec.worker.compute.pre.signer.SignerService;
 import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.iexec.common.utils.IexecEnvUtils.IEXEC_TASK_ID;
+import static com.iexec.common.worker.tee.TeeSessionEnvironmentVariable.IEXEC_TASK_ID;
 import static com.iexec.worker.api.WorkerApiManager.getWorkerApiClient;
 
 @Slf4j
@@ -43,7 +43,7 @@ public class PreComputeAppRunner {
         ReplicateStatusCause exitCause = ReplicateStatusCause.PRE_COMPUTE_FAILED_UNKNOWN_ISSUE;
         String chainTaskId = "";
         try {
-            chainTaskId = PreComputeArgs.getEnvVarOrThrow(IEXEC_TASK_ID);
+            chainTaskId = PreComputeArgs.getEnvVarOrThrow(IEXEC_TASK_ID.name());
         } catch (PreComputeException e) {
             log.error("TEE pre-compute cannot go further without taskID context", e);
             return 3;
