@@ -16,37 +16,33 @@
 
 package com.iexec.worker.compute.pre;
 
-import com.iexec.common.replicate.ReplicateStatusCause;
 import com.iexec.worker.api.WorkerApiClient;
 import com.iexec.worker.api.WorkerApiManager;
+import com.iexec.worker.compute.pre.signer.SignerService;
 import feign.FeignException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
-import static com.iexec.common.utils.IexecEnvUtils.IEXEC_TASK_ID;
+import static com.iexec.common.replicate.ReplicateStatusCause.POST_COMPUTE_COMPUTED_FILE_NOT_FOUND;
+import static com.iexec.common.worker.tee.TeeSessionEnvironmentVariable.IEXEC_TASK_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(SystemStubsExtension.class)
+@ExtendWith(MockitoExtension.class)
 class PreComputeAppRunnerTests {
     private static final String CHAIN_TASK_ID = "0x0";
 
-    @Spy
-    PreComputeAppRunner preComputeAppRunner = new PreComputeAppRunner();
+    @Mock
+    SignerService signerService;
 
-    @BeforeEach
-    void openMocks() {
-        MockitoAnnotations.openMocks(this);
-    }
+    @Spy
+    @InjectMocks
+    PreComputeAppRunner preComputeAppRunner;
 
     @Test
     void noTaskId() {
@@ -72,7 +68,7 @@ class PreComputeAppRunnerTests {
         environment.set(IEXEC_TASK_ID, CHAIN_TASK_ID);
 
         PreComputeApp preComputeApp = mock(PreComputeApp.class);
-        doThrow(new PreComputeException(ReplicateStatusCause.POST_COMPUTE_COMPUTED_FILE_NOT_FOUND))
+        doThrow(new PreComputeException(POST_COMPUTE_COMPUTED_FILE_NOT_FOUND))
                 .when(preComputeApp).run();
 
         WorkerApiClient workerApiClient = mock(WorkerApiClient.class);
@@ -110,12 +106,17 @@ class PreComputeAppRunnerTests {
         environment.set(IEXEC_TASK_ID, CHAIN_TASK_ID);
 
         PreComputeApp preComputeApp = mock(PreComputeApp.class);
-        doThrow(new PreComputeException(ReplicateStatusCause.POST_COMPUTE_COMPUTED_FILE_NOT_FOUND))
+        doThrow(new PreComputeException(POST_COMPUTE_COMPUTED_FILE_NOT_FOUND))
                 .when(preComputeApp).run();
 
+        when(signerService.getChallenge(CHAIN_TASK_ID)).thenReturn("authorization");
         WorkerApiClient workerApiClient = mock(WorkerApiClient.class);
         doThrow(FeignException.NotFound.class)
-                .when(workerApiClient).sendExitCauseForPreComputeStage(eq(CHAIN_TASK_ID), any(), any());
+                .when(workerApiClient).sendExitCauseForPreComputeStage(
+                        anyString(),
+                        eq(CHAIN_TASK_ID),
+                        any()
+                );
 
         when(preComputeAppRunner.createPreComputeApp(CHAIN_TASK_ID)).thenReturn(preComputeApp);
         try (MockedStatic<WorkerApiManager> workerApiManager = Mockito.mockStatic(WorkerApiManager.class)) {

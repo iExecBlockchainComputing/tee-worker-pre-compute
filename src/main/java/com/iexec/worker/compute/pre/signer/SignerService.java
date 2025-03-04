@@ -23,6 +23,7 @@ import com.iexec.worker.compute.pre.PreComputeException;
 import com.iexec.worker.compute.pre.utils.EnvUtils;
 import lombok.extern.slf4j.Slf4j;
 
+import static com.iexec.common.replicate.ReplicateStatusCause.*;
 import static com.iexec.common.worker.tee.TeeSessionEnvironmentVariable.SIGN_TEE_CHALLENGE_PRIVATE_KEY;
 import static com.iexec.common.worker.tee.TeeSessionEnvironmentVariable.SIGN_WORKER_ADDRESS;
 import static com.iexec.commons.poco.utils.SignatureUtils.isExpectedSignerOnSignedMessageHash;
@@ -38,18 +39,15 @@ public class SignerService {
                 CredentialsUtils.getAddress(enclaveChallengePrivateKey));
 
         if (!isSignatureValid) {
-            throw new PreComputeException(
-                    PRE_COMPUTE_INVALID_TEE_SIGNATURE,
-                    "Failed to verify TeeEnclaveChallenge signature (exiting)"
-            );
+            throw new PreComputeException(PRE_COMPUTE_INVALID_TEE_SIGNATURE);
         }
 
         return enclaveChallengeSignature.getValue();
     }
 
     public String getChallenge(final String chainTaskId) throws PreComputeException {
-        final String workerAddress = EnvUtils.getEnvVarOrThrow(SIGN_WORKER_ADDRESS.name(), SIGN_WORKER_ADDRESS_MISSING);
-        final String teeChallengePrivateKey = EnvUtils.getEnvVarOrThrow(SIGN_TEE_CHALLENGE_PRIVATE_KEY.name(), SIGN_TEE_CHALLENGE_PRIVATE_KEY_MISSING);
+        final String workerAddress = EnvUtils.getEnvVarOrThrow(SIGN_WORKER_ADDRESS.name(), PRE_COMPUTE_WORKER_ADDRESS_MISSING);
+        final String teeChallengePrivateKey = EnvUtils.getEnvVarOrThrow(SIGN_TEE_CHALLENGE_PRIVATE_KEY.name(), PRE_COMPUTE_TEE_CHALLENGE_PRIVATE_KEY_MISSING);
         final String messageHash = HashUtils.concatenateAndHash(chainTaskId, workerAddress);
         return signEnclaveChallenge(messageHash, teeChallengePrivateKey);
     }
