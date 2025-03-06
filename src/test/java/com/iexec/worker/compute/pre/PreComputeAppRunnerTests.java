@@ -26,10 +26,9 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
-
-import java.lang.reflect.Field;
 
 import static com.iexec.common.replicate.ReplicateStatusCause.POST_COMPUTE_COMPUTED_FILE_NOT_FOUND;
 import static com.iexec.common.worker.tee.TeeSessionEnvironmentVariable.IEXEC_TASK_ID;
@@ -78,9 +77,7 @@ class PreComputeAppRunnerTests {
 
         when(preComputeAppRunner.createPreComputeApp(CHAIN_TASK_ID)).thenReturn(preComputeApp);
 
-        Field signerServiceField = PreComputeAppRunner.class.getDeclaredField("signerService");
-        signerServiceField.setAccessible(true);
-        signerServiceField.set(preComputeAppRunner, signerService);
+        ReflectionTestUtils.setField(preComputeAppRunner, "signerService", signerService);
         when(signerService.getChallenge(CHAIN_TASK_ID)).thenReturn("authorization");
 
         try (MockedStatic<WorkerApiManager> workerApiManager = Mockito.mockStatic(WorkerApiManager.class)) {
@@ -101,9 +98,7 @@ class PreComputeAppRunnerTests {
         doThrow(new RuntimeException("Unknown cause")).when(preComputeApp).run();
         when(preComputeAppRunner.createPreComputeApp(CHAIN_TASK_ID)).thenReturn(preComputeApp);
 
-        Field signerServiceField = PreComputeAppRunner.class.getDeclaredField("signerService");
-        signerServiceField.setAccessible(true);
-        signerServiceField.set(preComputeAppRunner, signerService);
+        ReflectionTestUtils.setField(preComputeAppRunner, "signerService", signerService);
         when(signerService.getChallenge(CHAIN_TASK_ID)).thenReturn("authorization");
 
         try (MockedStatic<WorkerApiManager> workerApiManager = Mockito.mockStatic(WorkerApiManager.class)) {

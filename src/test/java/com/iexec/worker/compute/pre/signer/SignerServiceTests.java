@@ -16,25 +16,22 @@
 
 package com.iexec.worker.compute.pre.signer;
 
-import com.iexec.common.replicate.ReplicateStatusCause;
 import com.iexec.commons.poco.utils.HashUtils;
-import com.iexec.commons.poco.utils.SignatureUtils;
 import com.iexec.worker.compute.pre.PreComputeException;
-import com.iexec.worker.compute.pre.utils.EnvUtils;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockedStatic;
-import org.mockito.Mockito;
+import org.junit.jupiter.api.extension.ExtendWith;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
-import static com.iexec.common.replicate.ReplicateStatusCause.PRE_COMPUTE_INVALID_TEE_SIGNATURE;
+import static com.iexec.common.replicate.ReplicateStatusCause.PRE_COMPUTE_TEE_CHALLENGE_PRIVATE_KEY_MISSING;
+import static com.iexec.common.replicate.ReplicateStatusCause.PRE_COMPUTE_WORKER_ADDRESS_MISSING;
 import static com.iexec.common.worker.tee.TeeSessionEnvironmentVariable.SIGN_TEE_CHALLENGE_PRIVATE_KEY;
 import static com.iexec.common.worker.tee.TeeSessionEnvironmentVariable.SIGN_WORKER_ADDRESS;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
 
+
+@ExtendWith(SystemStubsExtension.class)
 class SignerServiceTests {
 
     private static final String CHAIN_TASK_ID = "0x123456789abcdef";
@@ -46,42 +43,34 @@ class SignerServiceTests {
     SignerService signerService = new SignerService();
 
     @Test
-    void shouldSignEnclaveChallenge() {
-        final String actualChallenge = Assertions.assertDoesNotThrow(() -> signerService.signEnclaveChallenge(MESSAGE_HASH, ENCLAVE_CHALLENGE_PRIVATE_KEY));
-        assertEquals(EXPECTED_CHALLENGE, actualChallenge);
+    void shouldSignEnclaveChallenge() throws PreComputeException {
+        String signature = signerService.signEnclaveChallenge(MESSAGE_HASH, ENCLAVE_CHALLENGE_PRIVATE_KEY);
+        assertEquals(EXPECTED_CHALLENGE, signature);
     }
 
     @Test
-    void shouldNotSignEnclaveChallengeSinceInvalidTeeSignature() {
-        try (MockedStatic<SignatureUtils> signatureUtils = Mockito.mockStatic(SignatureUtils.class)) {
-            signatureUtils.when(() -> SignatureUtils.isExpectedSignerOnSignedMessageHash(any(), any(), any()))
-                    .thenReturn(false);
-
-            final PreComputeException exception = assertThrows(PreComputeException.class, () -> signerService.signEnclaveChallenge(MESSAGE_HASH, ENCLAVE_CHALLENGE_PRIVATE_KEY));
-            assertEquals(PRE_COMPUTE_INVALID_TEE_SIGNATURE, exception.getExitCause());
-        }
+    void shouldGetChallenge(EnvironmentVariables environment) throws Exception {
+        environment.set(SIGN_WORKER_ADDRESS.name(), WORKER_ADDRESS);
+        environment.set(SIGN_TEE_CHALLENGE_PRIVATE_KEY.name(), ENCLAVE_CHALLENGE_PRIVATE_KEY);
+        String actualMessageHash = HashUtils.concatenateAndHash(CHAIN_TASK_ID, WORKER_ADDRESS);
+        String expectedSignature = signerService.signEnclaveChallenge(actualMessageHash, ENCLAVE_CHALLENGE_PRIVATE_KEY);
+        String actualChallenge = signerService.getChallenge(CHAIN_TASK_ID);
+        assertEquals(expectedSignature, actualChallenge);
     }
 
     @Test
-    void shouldGetChallenge() throws PreComputeException {
-        SignerService mockSignerService = Mockito.mock(SignerService.class, Mockito.CALLS_REAL_METHODS);
-
-        try (MockedStatic<EnvUtils> envUtils = Mockito.mockStatic(EnvUtils.class);
-             MockedStatic<HashUtils> hashUtils = Mockito.mockStatic(HashUtils.class)) {
-
-            envUtils.when(() -> EnvUtils.getEnvVarOrThrow(eq(SIGN_WORKER_ADDRESS), any(ReplicateStatusCause.class)))
-                    .thenReturn(WORKER_ADDRESS);
-            envUtils.when(() -> EnvUtils.getEnvVarOrThrow(eq(SIGN_TEE_CHALLENGE_PRIVATE_KEY), any(ReplicateStatusCause.class)))
-                    .thenReturn(ENCLAVE_CHALLENGE_PRIVATE_KEY);
-            hashUtils.when(() -> HashUtils.concatenateAndHash(CHAIN_TASK_ID, WORKER_ADDRESS))
-                    .thenReturn(MESSAGE_HASH);
-
-            when(mockSignerService.signEnclaveChallenge(MESSAGE_HASH, ENCLAVE_CHALLENGE_PRIVATE_KEY))
-                    .thenReturn(EXPECTED_CHALLENGE);
-
-            String actualChallenge = mockSignerService.getChallenge(CHAIN_TASK_ID);
-            assertEquals(EXPECTED_CHALLENGE, actualChallenge);
-        }
+    void shouldThrowWhenWorkerAddressEnvironmentVariableMissing(EnvironmentVariables environment) {
+        environment.set(SIGN_TEE_CHALLENGE_PRIVATE_KEY.name(), ENCLAVE_CHALLENGE_PRIVATE_KEY);
+        PreComputeException exception = assertThrows(PreComputeException.class,
+                () -> signerService.getChallenge(CHAIN_TASK_ID));
+        assertEquals(PRE_COMPUTE_WORKER_ADDRESS_MISSING, exception.getExitCause());
     }
 
+    @Test
+    void shouldThrowWhenChallengePrivateKeyEnvironmentVariableMissing(EnvironmentVariables environment) {
+        environment.set(SIGN_WORKER_ADDRESS.name(), WORKER_ADDRESS);
+        PreComputeException exception = assertThrows(PreComputeException.class,
+                () -> signerService.getChallenge(CHAIN_TASK_ID));
+        assertEquals(PRE_COMPUTE_TEE_CHALLENGE_PRIVATE_KEY_MISSING, exception.getExitCause());
+    }
 }

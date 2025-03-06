@@ -23,7 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
-import static com.iexec.common.replicate.ReplicateStatusCause.POST_COMPUTE_TASK_ID_MISSING;
+import static com.iexec.common.replicate.ReplicateStatusCause.PRE_COMPUTE_TASK_ID_MISSING;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -36,21 +36,21 @@ class EnvUtilsTests {
     @Test
     void shouldGetEnvVarOrThrow(EnvironmentVariables environment) {
         environment.set(ENVIRONMENT_VAR, ENVIRONMENT_VAR_VALUE);
-        final String actualValue = Assertions.assertDoesNotThrow(() -> EnvUtils.getEnvVarOrThrow(ENVIRONMENT_VAR, POST_COMPUTE_TASK_ID_MISSING));
+        final String actualValue = Assertions.assertDoesNotThrow(() -> EnvUtils.getEnvVarOrThrow(ENVIRONMENT_VAR, PRE_COMPUTE_TASK_ID_MISSING));
         assertEquals(ENVIRONMENT_VAR_VALUE, actualValue);
     }
 
     @Test
     void shouldNotGetEnvVarOrThrowSinceEmptyVar(EnvironmentVariables environment) {
         environment.set(ENVIRONMENT_VAR, "");
-        final PreComputeException exception = assertThrows(PreComputeException.class, () -> EnvUtils.getEnvVarOrThrow(ENVIRONMENT_VAR, POST_COMPUTE_TASK_ID_MISSING));
-        assertEquals(POST_COMPUTE_TASK_ID_MISSING, exception.getExitCause());
+        final PreComputeException exception = assertThrows(PreComputeException.class, () -> EnvUtils.getEnvVarOrThrow(ENVIRONMENT_VAR, PRE_COMPUTE_TASK_ID_MISSING));
+        assertEquals(PRE_COMPUTE_TASK_ID_MISSING, exception.getExitCause());
     }
 
     @Test
     void shouldNotGetEnvVarOrThrowSinceUnknownVar() {
-        final PreComputeException exception = assertThrows(PreComputeException.class, () -> EnvUtils.getEnvVarOrThrow(ENVIRONMENT_VAR, POST_COMPUTE_TASK_ID_MISSING));
-        assertEquals(POST_COMPUTE_TASK_ID_MISSING, exception.getExitCause());
+        final PreComputeException exception = assertThrows(PreComputeException.class, () -> EnvUtils.getEnvVarOrThrow(ENVIRONMENT_VAR, PRE_COMPUTE_TASK_ID_MISSING));
+        assertEquals(PRE_COMPUTE_TASK_ID_MISSING, exception.getExitCause());
     }
     // endregion
 }

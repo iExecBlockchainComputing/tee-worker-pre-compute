@@ -19,6 +19,7 @@ package com.iexec.worker.compute.pre;
 import com.iexec.common.replicate.ReplicateStatusCause;
 import com.iexec.common.worker.api.ExitMessage;
 import com.iexec.worker.compute.pre.signer.SignerService;
+import com.iexec.worker.compute.pre.utils.EnvUtils;
 import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,7 +44,7 @@ public class PreComputeAppRunner {
         ReplicateStatusCause exitCause = ReplicateStatusCause.PRE_COMPUTE_FAILED_UNKNOWN_ISSUE;
         String chainTaskId = "";
         try {
-            chainTaskId = PreComputeArgs.getEnvVarOrThrow(IEXEC_TASK_ID.name());
+            chainTaskId = EnvUtils.getEnvVarOrThrow(IEXEC_TASK_ID, PreComputeArgs.buildReplicateCauseIfMissing(IEXEC_TASK_ID.name()));
         } catch (PreComputeException e) {
             log.error("TEE pre-compute cannot go further without taskID context", e);
             return 3;

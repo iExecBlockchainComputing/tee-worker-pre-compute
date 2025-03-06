@@ -8,6 +8,7 @@ All notable changes to this project will be documented in this file.
 
 - Update build to run application in Scone framework 5.7 and 5.9 enlaves. (#96)
 - Decrypt base64 encoded key before calling CipherUtils to decrypt a dataset to embrace API breaking changes in iexec-common. (#98)
+- Add authorization proof to requests sending data to the worker. (#99)
 
 ### Dependency Upgrades
 
