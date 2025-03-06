@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2022-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,44 +17,164 @@
 package com.iexec.worker.compute.pre;
 
 import com.iexec.common.replicate.ReplicateStatusCause;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.MethodSource;
-
-import java.util.Map;
-import java.util.stream.Stream;
+import org.junit.jupiter.params.provider.ValueSource;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import static com.iexec.common.utils.IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX;
 import static com.iexec.common.worker.tee.TeeSessionEnvironmentVariable.*;
+import static org.junit.jupiter.api.Assertions.*;
 
+@ExtendWith(SystemStubsExtension.class)
 class PreComputeArgsTests {
 
+    private static final String CHAIN_TASK_ID = "0xabc123";
+    private static final String OUTPUT_DIR = "/iexec_out";
+    private static final String DATASET_URL = "https://dataset.url";
+    private static final String DATASET_KEY = "datasetKey123";
+    private static final String DATASET_CHECKSUM = "0x123checksum";
+    private static final String DATASET_FILENAME = "dataset.txt";
+    private static final String INPUT_FILE_URL_1 = "https://input1.url";
+    private static final String INPUT_FILE_URL_2 = "https://input2.url";
 
-    private static Stream<Map.Entry<String, ReplicateStatusCause>> buildReplicateCauseIfMissing() {
-        return Map.of(
-                IEXEC_TASK_ID.name(), ReplicateStatusCause.PRE_COMPUTE_TASK_ID_MISSING,
-                IEXEC_PRE_COMPUTE_OUT.name(), ReplicateStatusCause.PRE_COMPUTE_OUTPUT_PATH_MISSING,
-                IS_DATASET_REQUIRED.name(), ReplicateStatusCause.PRE_COMPUTE_IS_DATASET_REQUIRED_MISSING,
-                IEXEC_DATASET_URL.name(), ReplicateStatusCause.PRE_COMPUTE_DATASET_URL_MISSING,
-                IEXEC_DATASET_KEY.name(), ReplicateStatusCause.PRE_COMPUTE_DATASET_KEY_MISSING,
-                IEXEC_DATASET_CHECKSUM.name(), ReplicateStatusCause.PRE_COMPUTE_DATASET_CHECKSUM_MISSING,
-                IEXEC_DATASET_FILENAME.name(), ReplicateStatusCause.PRE_COMPUTE_DATASET_FILENAME_MISSING,
-                IEXEC_INPUT_FILES_NUMBER.name(), ReplicateStatusCause.PRE_COMPUTE_INPUT_FILES_NUMBER_MISSING,
-                IEXEC_INPUT_FILE_URL_PREFIX + RandomStringUtils.random(100), ReplicateStatusCause.PRE_COMPUTE_AT_LEAST_ONE_INPUT_FILE_URL_MISSING
-        ).entrySet().stream();
-    }
-
-    @ParameterizedTest
-    @MethodSource("buildReplicateCauseIfMissing")
-    void shouldBuildReplicateCauseIfMissing(Map.Entry<String, ReplicateStatusCause> entry) {
-        Assertions.assertEquals(entry.getValue(), PreComputeArgs.buildReplicateCauseIfMissing(entry.getKey()));
+    @Test
+    void shouldReadArgsWithoutDataset(EnvironmentVariables environment) throws Exception {
+        environment.set(IEXEC_PRE_COMPUTE_OUT.name(), OUTPUT_DIR);
+        environment.set(IS_DATASET_REQUIRED.name(), "false");
+        environment.set(IEXEC_INPUT_FILES_NUMBER.name(), "1");
+        environment.set(IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_URL_1);
+        final PreComputeArgs args = PreComputeArgs.readArgs(CHAIN_TASK_ID);
+        assertEquals(CHAIN_TASK_ID, args.getChainTaskId());
+        assertEquals(OUTPUT_DIR, args.getOutputDir());
+        assertFalse(args.isDatasetRequired());
+        assertEquals(1, args.getInputFiles().size());
+        assertEquals(INPUT_FILE_URL_1, args.getInputFiles().get(0));
     }
 
     @Test
-    void shouldNotBuildReplicateCauseIfMissingSinceUnknown() {
-        Assertions.assertNull(PreComputeArgs.buildReplicateCauseIfMissing("SOME_ENV_VAR"));
+    void shouldReadArgsWithDataset(EnvironmentVariables environment) throws Exception {
+        environment.set(IEXEC_PRE_COMPUTE_OUT.name(), OUTPUT_DIR);
+        environment.set(IS_DATASET_REQUIRED.name(), "true");
+        environment.set(IEXEC_DATASET_URL.name(), DATASET_URL);
+        environment.set(IEXEC_DATASET_KEY.name(), DATASET_KEY);
+        environment.set(IEXEC_DATASET_CHECKSUM.name(), DATASET_CHECKSUM);
+        environment.set(IEXEC_DATASET_FILENAME.name(), DATASET_FILENAME);
+        environment.set(IEXEC_INPUT_FILES_NUMBER.name(), "0");
+        final PreComputeArgs args = PreComputeArgs.readArgs(CHAIN_TASK_ID);
+        assertEquals(CHAIN_TASK_ID, args.getChainTaskId());
+        assertEquals(OUTPUT_DIR, args.getOutputDir());
+        assertTrue(args.isDatasetRequired());
+        assertEquals(DATASET_URL, args.getEncryptedDatasetUrl());
+        assertEquals(DATASET_KEY, args.getEncryptedDatasetBase64Key());
+        assertEquals(DATASET_CHECKSUM, args.getEncryptedDatasetChecksum());
+        assertEquals(DATASET_FILENAME, args.getPlainDatasetFilename());
+        assertEquals(0, args.getInputFiles().size());
     }
 
+    @Test
+    void shouldReadArgsWithMultipleInputFiles(EnvironmentVariables environment) throws Exception {
+        environment.set(IEXEC_PRE_COMPUTE_OUT.name(), OUTPUT_DIR);
+        environment.set(IS_DATASET_REQUIRED.name(), "false");
+        environment.set(IEXEC_INPUT_FILES_NUMBER.name(), "2");
+        environment.set(IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_URL_1);
+        environment.set(IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_URL_2);
+        final PreComputeArgs args = PreComputeArgs.readArgs(CHAIN_TASK_ID);
+        assertEquals(2, args.getInputFiles().size());
+        assertEquals(INPUT_FILE_URL_1, args.getInputFiles().get(0));
+        assertEquals(INPUT_FILE_URL_2, args.getInputFiles().get(1));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "IEXEC_PRE_COMPUTE_OUT",
+            "IS_DATASET_REQUIRED",
+            "IEXEC_INPUT_FILES_NUMBER"
+    })
+    void shouldThrowWhenRequiredEnvVarMissing(String missingVar, EnvironmentVariables environment) throws Exception {
+        if (!missingVar.equals(IEXEC_PRE_COMPUTE_OUT.name())) {
+            environment.set(IEXEC_PRE_COMPUTE_OUT.name(), OUTPUT_DIR);
+        }
+        if (!missingVar.equals(IS_DATASET_REQUIRED.name())) {
+            environment.set(IS_DATASET_REQUIRED.name(), "false");
+        }
+        if (!missingVar.equals(IEXEC_INPUT_FILES_NUMBER.name())) {
+            environment.set(IEXEC_INPUT_FILES_NUMBER.name(), "0");
+        }
+        PreComputeException exception = assertThrows(PreComputeException.class,
+                () -> PreComputeArgs.readArgs(CHAIN_TASK_ID));
+        if (missingVar.equals(IEXEC_PRE_COMPUTE_OUT.name())) {
+            assertEquals(ReplicateStatusCause.PRE_COMPUTE_OUTPUT_PATH_MISSING, exception.getExitCause());
+        } else if (missingVar.equals(IS_DATASET_REQUIRED.name())) {
+            assertEquals(ReplicateStatusCause.PRE_COMPUTE_IS_DATASET_REQUIRED_MISSING, exception.getExitCause());
+        } else if (missingVar.equals(IEXEC_INPUT_FILES_NUMBER.name())) {
+            assertEquals(ReplicateStatusCause.PRE_COMPUTE_INPUT_FILES_NUMBER_MISSING, exception.getExitCause());
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "IEXEC_DATASET_URL",
+            "IEXEC_DATASET_KEY",
+            "IEXEC_DATASET_CHECKSUM",
+            "IEXEC_DATASET_FILENAME"
+    })
+    void shouldThrowWhenDatasetEnvVarMissing(String missingVar, EnvironmentVariables environment) throws Exception {
+        environment.set(IEXEC_PRE_COMPUTE_OUT.name(), OUTPUT_DIR);
+        environment.set(IS_DATASET_REQUIRED.name(), "true");
+        environment.set(IEXEC_INPUT_FILES_NUMBER.name(), "0");
+        if (!missingVar.equals(IEXEC_DATASET_URL.name())) {
+            environment.set(IEXEC_DATASET_URL.name(), DATASET_URL);
+        }
+        if (!missingVar.equals(IEXEC_DATASET_KEY.name())) {
+            environment.set(IEXEC_DATASET_KEY.name(), DATASET_KEY);
+        }
+        if (!missingVar.equals(IEXEC_DATASET_CHECKSUM.name())) {
+            environment.set(IEXEC_DATASET_CHECKSUM.name(), DATASET_CHECKSUM);
+        }
+        if (!missingVar.equals(IEXEC_DATASET_FILENAME.name())) {
+            environment.set(IEXEC_DATASET_FILENAME.name(), DATASET_FILENAME);
+        }
+        PreComputeException exception = assertThrows(PreComputeException.class,
+                () -> PreComputeArgs.readArgs(CHAIN_TASK_ID));
+        if (missingVar.equals(IEXEC_DATASET_URL.name())) {
+            assertEquals(ReplicateStatusCause.PRE_COMPUTE_DATASET_URL_MISSING, exception.getExitCause());
+        } else if (missingVar.equals(IEXEC_DATASET_KEY.name())) {
+            assertEquals(ReplicateStatusCause.PRE_COMPUTE_DATASET_KEY_MISSING, exception.getExitCause());
+        } else if (missingVar.equals(IEXEC_DATASET_CHECKSUM.name())) {
+            assertEquals(ReplicateStatusCause.PRE_COMPUTE_DATASET_CHECKSUM_MISSING, exception.getExitCause());
+        } else if (missingVar.equals(IEXEC_DATASET_FILENAME.name())) {
+            assertEquals(ReplicateStatusCause.PRE_COMPUTE_DATASET_FILENAME_MISSING, exception.getExitCause());
+        }
+    }
+
+    @Test
+    void shouldThrowWhenInputFileUrlMissing(EnvironmentVariables environment) {
+        environment.set(IEXEC_PRE_COMPUTE_OUT.name(), OUTPUT_DIR);
+        environment.set(IS_DATASET_REQUIRED.name(), "false");
+        environment.set(IEXEC_INPUT_FILES_NUMBER.name(), "1");
+        PreComputeException exception = assertThrows(PreComputeException.class,
+                () -> PreComputeArgs.readArgs(CHAIN_TASK_ID));
+        assertEquals(ReplicateStatusCause.PRE_COMPUTE_AT_LEAST_ONE_INPUT_FILE_URL_MISSING, exception.getExitCause());
+    }
+
+    @Test
+    void shouldCreateEmptyInputFilesListWhenNumberIsZero(EnvironmentVariables environment) throws Exception {
+        environment.set(IEXEC_PRE_COMPUTE_OUT.name(), OUTPUT_DIR);
+        environment.set(IS_DATASET_REQUIRED.name(), "false");
+        environment.set(IEXEC_INPUT_FILES_NUMBER.name(), "0");
+        PreComputeArgs args = PreComputeArgs.readArgs(CHAIN_TASK_ID);
+        assertNotNull(args.getInputFiles());
+        assertEquals(0, args.getInputFiles().size());
+    }
+
+    @Test
+    void shouldHandleInvalidInputFilesNumberFormat(EnvironmentVariables environment) {
+        environment.set(IEXEC_PRE_COMPUTE_OUT.name(), OUTPUT_DIR);
+        environment.set(IS_DATASET_REQUIRED.name(), "false");
+        environment.set(IEXEC_INPUT_FILES_NUMBER.name(), "not-a-number");
+        assertThrows(NumberFormatException.class, () -> PreComputeArgs.readArgs(CHAIN_TASK_ID));
+    }
 }

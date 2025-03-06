@@ -44,7 +44,7 @@ public class PreComputeAppRunner {
         ReplicateStatusCause exitCause = ReplicateStatusCause.PRE_COMPUTE_FAILED_UNKNOWN_ISSUE;
         String chainTaskId = "";
         try {
-            chainTaskId = EnvUtils.getEnvVarOrThrow(IEXEC_TASK_ID, PreComputeArgs.buildReplicateCauseIfMissing(IEXEC_TASK_ID.name()));
+            chainTaskId = EnvUtils.getEnvVarOrThrow(IEXEC_TASK_ID, ReplicateStatusCause.PRE_COMPUTE_TASK_ID_MISSING);
         } catch (PreComputeException e) {
             log.error("TEE pre-compute cannot go further without taskID context", e);
             return 3;
