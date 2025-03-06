@@ -32,25 +32,6 @@ class EnvUtilsTests {
     private static final String ENVIRONMENT_VAR = "envVar";
     private static final String ENVIRONMENT_VAR_VALUE = "envVarValue";
 
-    // region getEnvVar
-    @Test
-    void shouldGetEnvVar(EnvironmentVariables environment) {
-        environment.set(ENVIRONMENT_VAR, ENVIRONMENT_VAR_VALUE);
-        assertEquals(ENVIRONMENT_VAR_VALUE, EnvUtils.getEnvVar(ENVIRONMENT_VAR));
-    }
-
-    @Test
-    void shouldNotGetEnvVarSinceEmptyVar(EnvironmentVariables environment) {
-        environment.set(ENVIRONMENT_VAR, "");
-        assertEquals("", EnvUtils.getEnvVar(ENVIRONMENT_VAR));
-    }
-
-    @Test
-    void shouldNotGetEnvVarSinceUnknownVar() {
-        assertEquals("", EnvUtils.getEnvVar(ENVIRONMENT_VAR));
-    }
-    // endregion
-
     // region getEnvVarOrThrow
     @Test
     void shouldGetEnvVarOrThrow(EnvironmentVariables environment) {

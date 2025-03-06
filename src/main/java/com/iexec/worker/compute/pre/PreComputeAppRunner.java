@@ -28,7 +28,7 @@ import static com.iexec.worker.api.WorkerApiManager.getWorkerApiClient;
 @Slf4j
 public class PreComputeAppRunner {
 
-    SignerService signerService;
+    private final SignerService signerService = new SignerService();
 
     /**
      * Run PreComputeApp and handle possible exceptions.

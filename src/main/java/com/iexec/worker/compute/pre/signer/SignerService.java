@@ -46,8 +46,8 @@ public class SignerService {
     }
 
     public String getChallenge(final String chainTaskId) throws PreComputeException {
-        final String workerAddress = EnvUtils.getEnvVarOrThrow(SIGN_WORKER_ADDRESS.name(), PRE_COMPUTE_WORKER_ADDRESS_MISSING);
-        final String teeChallengePrivateKey = EnvUtils.getEnvVarOrThrow(SIGN_TEE_CHALLENGE_PRIVATE_KEY.name(), PRE_COMPUTE_TEE_CHALLENGE_PRIVATE_KEY_MISSING);
+        final String workerAddress = EnvUtils.getEnvVarOrThrow(SIGN_WORKER_ADDRESS, PRE_COMPUTE_WORKER_ADDRESS_MISSING);
+        final String teeChallengePrivateKey = EnvUtils.getEnvVarOrThrow(SIGN_TEE_CHALLENGE_PRIVATE_KEY, PRE_COMPUTE_TEE_CHALLENGE_PRIVATE_KEY_MISSING);
         final String messageHash = HashUtils.concatenateAndHash(chainTaskId, workerAddress);
         return signEnclaveChallenge(messageHash, teeChallengePrivateKey);
     }

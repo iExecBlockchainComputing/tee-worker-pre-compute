@@ -69,9 +69,9 @@ class SignerServiceTests {
         try (MockedStatic<EnvUtils> envUtils = Mockito.mockStatic(EnvUtils.class);
              MockedStatic<HashUtils> hashUtils = Mockito.mockStatic(HashUtils.class)) {
 
-            envUtils.when(() -> EnvUtils.getEnvVarOrThrow(eq(SIGN_WORKER_ADDRESS.name()), any(ReplicateStatusCause.class)))
+            envUtils.when(() -> EnvUtils.getEnvVarOrThrow(eq(SIGN_WORKER_ADDRESS), any(ReplicateStatusCause.class)))
                     .thenReturn(WORKER_ADDRESS);
-            envUtils.when(() -> EnvUtils.getEnvVarOrThrow(eq(SIGN_TEE_CHALLENGE_PRIVATE_KEY.name()), any(ReplicateStatusCause.class)))
+            envUtils.when(() -> EnvUtils.getEnvVarOrThrow(eq(SIGN_TEE_CHALLENGE_PRIVATE_KEY), any(ReplicateStatusCause.class)))
                     .thenReturn(ENCLAVE_CHALLENGE_PRIVATE_KEY);
             hashUtils.when(() -> HashUtils.concatenateAndHash(CHAIN_TASK_ID, WORKER_ADDRESS))
                     .thenReturn(MESSAGE_HASH);
