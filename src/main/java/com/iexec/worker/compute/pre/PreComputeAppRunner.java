@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,14 +18,18 @@ package com.iexec.worker.compute.pre;
 
 import com.iexec.common.replicate.ReplicateStatusCause;
 import com.iexec.common.worker.api.ExitMessage;
+import com.iexec.worker.compute.pre.signer.SignerService;
+import com.iexec.worker.compute.pre.utils.EnvUtils;
 import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.iexec.common.utils.IexecEnvUtils.IEXEC_TASK_ID;
+import static com.iexec.common.worker.tee.TeeSessionEnvironmentVariable.IEXEC_TASK_ID;
 import static com.iexec.worker.api.WorkerApiManager.getWorkerApiClient;
 
 @Slf4j
 public class PreComputeAppRunner {
+
+    private final SignerService signerService = new SignerService();
 
     /**
      * Run PreComputeApp and handle possible exceptions.
@@ -40,7 +44,7 @@ public class PreComputeAppRunner {
         ReplicateStatusCause exitCause = ReplicateStatusCause.PRE_COMPUTE_FAILED_UNKNOWN_ISSUE;
         String chainTaskId = "";
         try {
-            chainTaskId = PreComputeArgs.getEnvVarOrThrow(IEXEC_TASK_ID);
+            chainTaskId = EnvUtils.getEnvVarOrThrow(IEXEC_TASK_ID, ReplicateStatusCause.PRE_COMPUTE_TASK_ID_MISSING);
         } catch (PreComputeException e) {
             log.error("TEE pre-compute cannot go further without taskID context", e);
             return 3;
@@ -57,10 +61,11 @@ public class PreComputeAppRunner {
             log.error("TEE pre-compute failed without explicit exitCause", e);
         }
         try {
-            getWorkerApiClient()
-                    .sendExitCauseForPreComputeStage(chainTaskId,
-                            new ExitMessage(exitCause));
+            final String authorization = signerService.getChallenge(chainTaskId);
+            getWorkerApiClient().sendExitCauseForPreComputeStage(authorization, chainTaskId, new ExitMessage(exitCause));
             return 1;
+        } catch (PreComputeException e) {
+            log.error("Failed to sign exitCause message [exitCause:{}]", exitCause, e);
         } catch (FeignException e) {
             log.error("Failed to report exit exitCause [exitCause:{}]", exitCause, e);
         }

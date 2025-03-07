@@ -83,6 +83,7 @@ testing {
             dependencies {
                 implementation 'org.assertj:assertj-core'
                 implementation "org.mockito:mockito-junit-jupiter"
+                implementation "org.springframework:spring-test"
                 implementation "uk.org.webcompere:system-stubs-core:$systemStubsVersion"    // activates env var setting
                 implementation "uk.org.webcompere:system-stubs-jupiter:$systemStubsVersion" // activates env var setting
             }

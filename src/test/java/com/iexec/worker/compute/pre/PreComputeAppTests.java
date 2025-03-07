@@ -32,8 +32,8 @@ import java.io.File;
 import java.net.URL;
 import java.util.List;
 
-import static com.iexec.common.precompute.PreComputeUtils.*;
-import static com.iexec.common.utils.IexecEnvUtils.*;
+import static com.iexec.common.utils.IexecEnvUtils.IEXEC_INPUT_FILE_URL_PREFIX;
+import static com.iexec.common.worker.tee.TeeSessionEnvironmentVariable.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
