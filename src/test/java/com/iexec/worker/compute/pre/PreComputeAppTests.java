@@ -51,8 +51,6 @@ class PreComputeAppTests {
             "iExecBlockchainComputing/tee-worker-pre-compute/develop/src/test/resources/";
 
     private static final String CHAIN_TASK_ID = "0xabc";
-    private static final String WORKER_ADDRESS = "0x123";
-    private static final String ENCLAVE_PRIVATE_KEY = "enclave-private-key";
     private static final String DATASET_FILENAME = "my-dataset";
     private static final String DATASET_RESOURCE_NAME = "encrypted-data.bin";
     private static final String HTTP_DATASET_URL = REPO_URL + DATASET_RESOURCE_NAME;
@@ -82,8 +80,6 @@ class PreComputeAppTests {
     void shouldRunSuccessfullyWithDataset(EnvironmentVariables environment) throws PreComputeException {
         environment.set(
                 IEXEC_TASK_ID, CHAIN_TASK_ID,
-                SIGN_WORKER_ADDRESS, WORKER_ADDRESS,
-                SIGN_TEE_CHALLENGE_PRIVATE_KEY, ENCLAVE_PRIVATE_KEY,
                 IEXEC_PRE_COMPUTE_OUT, outputDir.getAbsolutePath(),
                 IS_DATASET_REQUIRED, true,
                 IEXEC_DATASET_URL, HTTP_DATASET_URL,
@@ -111,8 +107,6 @@ class PreComputeAppTests {
     void shouldRunSuccessfullyWithoutDataset(EnvironmentVariables environment) throws PreComputeException {
         environment.set(
                 IEXEC_TASK_ID, CHAIN_TASK_ID,
-                SIGN_WORKER_ADDRESS, WORKER_ADDRESS,
-                SIGN_TEE_CHALLENGE_PRIVATE_KEY, SIGN_TEE_CHALLENGE_PRIVATE_KEY,
                 IEXEC_PRE_COMPUTE_OUT, outputDir.getAbsolutePath(),
                 IS_DATASET_REQUIRED, false,
                 IEXEC_INPUT_FILES_NUMBER, 2,

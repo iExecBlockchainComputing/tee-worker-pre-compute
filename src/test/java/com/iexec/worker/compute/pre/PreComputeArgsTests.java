@@ -17,10 +17,11 @@
 package com.iexec.worker.compute.pre;
 
 import com.iexec.common.replicate.ReplicateStatusCause;
+import com.iexec.common.worker.tee.TeeSessionEnvironmentVariable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
@@ -88,64 +89,60 @@ class PreComputeArgsTests {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {
-            "IEXEC_PRE_COMPUTE_OUT",
-            "IS_DATASET_REQUIRED",
-            "IEXEC_INPUT_FILES_NUMBER"
-    })
-    void shouldThrowWhenRequiredEnvVarMissing(String missingVar, EnvironmentVariables environment) throws Exception {
-        if (!missingVar.equals(IEXEC_PRE_COMPUTE_OUT.name())) {
-            environment.set(IEXEC_PRE_COMPUTE_OUT.name(), OUTPUT_DIR);
+    @EnumSource(
+            value = TeeSessionEnvironmentVariable.class,
+            names = {"IEXEC_PRE_COMPUTE_OUT", "IS_DATASET_REQUIRED", "IEXEC_INPUT_FILES_NUMBER"}
+    )
+    void shouldThrowWhenRequiredEnvVarMissing(TeeSessionEnvironmentVariable missingVar, EnvironmentVariables environment) {
+        if (!missingVar.equals(IEXEC_PRE_COMPUTE_OUT)) {
+            environment.set(IEXEC_PRE_COMPUTE_OUT, OUTPUT_DIR);
         }
-        if (!missingVar.equals(IS_DATASET_REQUIRED.name())) {
-            environment.set(IS_DATASET_REQUIRED.name(), "false");
+        if (!missingVar.equals(IS_DATASET_REQUIRED)) {
+            environment.set(IS_DATASET_REQUIRED, "false");
         }
-        if (!missingVar.equals(IEXEC_INPUT_FILES_NUMBER.name())) {
-            environment.set(IEXEC_INPUT_FILES_NUMBER.name(), "0");
+        if (!missingVar.equals(IEXEC_INPUT_FILES_NUMBER)) {
+            environment.set(IEXEC_INPUT_FILES_NUMBER, "0");
         }
-        PreComputeException exception = assertThrows(PreComputeException.class,
-                () -> PreComputeArgs.readArgs(CHAIN_TASK_ID));
-        if (missingVar.equals(IEXEC_PRE_COMPUTE_OUT.name())) {
+        PreComputeException exception = assertThrows(PreComputeException.class, () -> PreComputeArgs.readArgs(CHAIN_TASK_ID));
+        if (missingVar == IEXEC_PRE_COMPUTE_OUT) {
             assertEquals(ReplicateStatusCause.PRE_COMPUTE_OUTPUT_PATH_MISSING, exception.getExitCause());
-        } else if (missingVar.equals(IS_DATASET_REQUIRED.name())) {
+        } else if (missingVar == IS_DATASET_REQUIRED) {
             assertEquals(ReplicateStatusCause.PRE_COMPUTE_IS_DATASET_REQUIRED_MISSING, exception.getExitCause());
-        } else if (missingVar.equals(IEXEC_INPUT_FILES_NUMBER.name())) {
+        } else if (missingVar == IEXEC_INPUT_FILES_NUMBER) {
             assertEquals(ReplicateStatusCause.PRE_COMPUTE_INPUT_FILES_NUMBER_MISSING, exception.getExitCause());
         }
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {
-            "IEXEC_DATASET_URL",
-            "IEXEC_DATASET_KEY",
-            "IEXEC_DATASET_CHECKSUM",
-            "IEXEC_DATASET_FILENAME"
-    })
-    void shouldThrowWhenDatasetEnvVarMissing(String missingVar, EnvironmentVariables environment) throws Exception {
-        environment.set(IEXEC_PRE_COMPUTE_OUT.name(), OUTPUT_DIR);
-        environment.set(IS_DATASET_REQUIRED.name(), "true");
-        environment.set(IEXEC_INPUT_FILES_NUMBER.name(), "0");
-        if (!missingVar.equals(IEXEC_DATASET_URL.name())) {
-            environment.set(IEXEC_DATASET_URL.name(), DATASET_URL);
+    @EnumSource(
+            value = TeeSessionEnvironmentVariable.class,
+            names = {"IEXEC_DATASET_URL", "IEXEC_DATASET_KEY", "IEXEC_DATASET_CHECKSUM", "IEXEC_DATASET_FILENAME"}
+    )
+    void shouldThrowWhenDatasetEnvVarMissing(TeeSessionEnvironmentVariable missingVar, EnvironmentVariables environment) {
+        environment.set(IEXEC_PRE_COMPUTE_OUT, OUTPUT_DIR);
+        environment.set(IS_DATASET_REQUIRED, "true");
+        environment.set(IEXEC_INPUT_FILES_NUMBER, "0");
+        if (!missingVar.equals(IEXEC_DATASET_URL)) {
+            environment.set(IEXEC_DATASET_URL, DATASET_URL);
         }
-        if (!missingVar.equals(IEXEC_DATASET_KEY.name())) {
-            environment.set(IEXEC_DATASET_KEY.name(), DATASET_KEY);
+        if (!missingVar.equals(IEXEC_DATASET_KEY)) {
+            environment.set(IEXEC_DATASET_KEY, DATASET_KEY);
         }
-        if (!missingVar.equals(IEXEC_DATASET_CHECKSUM.name())) {
-            environment.set(IEXEC_DATASET_CHECKSUM.name(), DATASET_CHECKSUM);
+        if (!missingVar.equals(IEXEC_DATASET_CHECKSUM)) {
+            environment.set(IEXEC_DATASET_CHECKSUM, DATASET_CHECKSUM);
         }
-        if (!missingVar.equals(IEXEC_DATASET_FILENAME.name())) {
-            environment.set(IEXEC_DATASET_FILENAME.name(), DATASET_FILENAME);
+        if (!missingVar.equals(IEXEC_DATASET_FILENAME)) {
+            environment.set(IEXEC_DATASET_FILENAME, DATASET_FILENAME);
         }
         PreComputeException exception = assertThrows(PreComputeException.class,
                 () -> PreComputeArgs.readArgs(CHAIN_TASK_ID));
-        if (missingVar.equals(IEXEC_DATASET_URL.name())) {
+        if (missingVar.equals(IEXEC_DATASET_URL)) {
             assertEquals(ReplicateStatusCause.PRE_COMPUTE_DATASET_URL_MISSING, exception.getExitCause());
-        } else if (missingVar.equals(IEXEC_DATASET_KEY.name())) {
+        } else if (missingVar.equals(IEXEC_DATASET_KEY)) {
             assertEquals(ReplicateStatusCause.PRE_COMPUTE_DATASET_KEY_MISSING, exception.getExitCause());
-        } else if (missingVar.equals(IEXEC_DATASET_CHECKSUM.name())) {
+        } else if (missingVar.equals(IEXEC_DATASET_CHECKSUM)) {
             assertEquals(ReplicateStatusCause.PRE_COMPUTE_DATASET_CHECKSUM_MISSING, exception.getExitCause());
-        } else if (missingVar.equals(IEXEC_DATASET_FILENAME.name())) {
+        } else if (missingVar.equals(IEXEC_DATASET_FILENAME)) {
             assertEquals(ReplicateStatusCause.PRE_COMPUTE_DATASET_FILENAME_MISSING, exception.getExitCause());
         }
     }
