@@ -43,9 +43,9 @@ class PreComputeArgsTests {
 
     @Test
     void shouldReadArgsWithoutDataset(EnvironmentVariables environment) throws Exception {
-        environment.set(IEXEC_PRE_COMPUTE_OUT.name(), OUTPUT_DIR);
-        environment.set(IS_DATASET_REQUIRED.name(), "false");
-        environment.set(IEXEC_INPUT_FILES_NUMBER.name(), "1");
+        environment.set(IEXEC_PRE_COMPUTE_OUT, OUTPUT_DIR);
+        environment.set(IS_DATASET_REQUIRED, "false");
+        environment.set(IEXEC_INPUT_FILES_NUMBER, "1");
         environment.set(IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_URL_1);
         final PreComputeArgs args = PreComputeArgs.readArgs(CHAIN_TASK_ID);
         assertEquals(CHAIN_TASK_ID, args.getChainTaskId());
@@ -57,13 +57,13 @@ class PreComputeArgsTests {
 
     @Test
     void shouldReadArgsWithDataset(EnvironmentVariables environment) throws Exception {
-        environment.set(IEXEC_PRE_COMPUTE_OUT.name(), OUTPUT_DIR);
-        environment.set(IS_DATASET_REQUIRED.name(), "true");
-        environment.set(IEXEC_DATASET_URL.name(), DATASET_URL);
-        environment.set(IEXEC_DATASET_KEY.name(), DATASET_KEY);
-        environment.set(IEXEC_DATASET_CHECKSUM.name(), DATASET_CHECKSUM);
-        environment.set(IEXEC_DATASET_FILENAME.name(), DATASET_FILENAME);
-        environment.set(IEXEC_INPUT_FILES_NUMBER.name(), "0");
+        environment.set(IEXEC_PRE_COMPUTE_OUT, OUTPUT_DIR);
+        environment.set(IS_DATASET_REQUIRED, "true");
+        environment.set(IEXEC_DATASET_URL, DATASET_URL);
+        environment.set(IEXEC_DATASET_KEY, DATASET_KEY);
+        environment.set(IEXEC_DATASET_CHECKSUM, DATASET_CHECKSUM);
+        environment.set(IEXEC_DATASET_FILENAME, DATASET_FILENAME);
+        environment.set(IEXEC_INPUT_FILES_NUMBER, "0");
         final PreComputeArgs args = PreComputeArgs.readArgs(CHAIN_TASK_ID);
         assertEquals(CHAIN_TASK_ID, args.getChainTaskId());
         assertEquals(OUTPUT_DIR, args.getOutputDir());
@@ -77,9 +77,9 @@ class PreComputeArgsTests {
 
     @Test
     void shouldReadArgsWithMultipleInputFiles(EnvironmentVariables environment) throws Exception {
-        environment.set(IEXEC_PRE_COMPUTE_OUT.name(), OUTPUT_DIR);
-        environment.set(IS_DATASET_REQUIRED.name(), "false");
-        environment.set(IEXEC_INPUT_FILES_NUMBER.name(), "2");
+        environment.set(IEXEC_PRE_COMPUTE_OUT, OUTPUT_DIR);
+        environment.set(IS_DATASET_REQUIRED, "false");
+        environment.set(IEXEC_INPUT_FILES_NUMBER, "2");
         environment.set(IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_URL_1);
         environment.set(IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_URL_2);
         final PreComputeArgs args = PreComputeArgs.readArgs(CHAIN_TASK_ID);
@@ -149,9 +149,9 @@ class PreComputeArgsTests {
 
     @Test
     void shouldThrowWhenInputFileUrlMissing(EnvironmentVariables environment) {
-        environment.set(IEXEC_PRE_COMPUTE_OUT.name(), OUTPUT_DIR);
-        environment.set(IS_DATASET_REQUIRED.name(), "false");
-        environment.set(IEXEC_INPUT_FILES_NUMBER.name(), "1");
+        environment.set(IEXEC_PRE_COMPUTE_OUT, OUTPUT_DIR);
+        environment.set(IS_DATASET_REQUIRED, "false");
+        environment.set(IEXEC_INPUT_FILES_NUMBER, "1");
         PreComputeException exception = assertThrows(PreComputeException.class,
                 () -> PreComputeArgs.readArgs(CHAIN_TASK_ID));
         assertEquals(ReplicateStatusCause.PRE_COMPUTE_AT_LEAST_ONE_INPUT_FILE_URL_MISSING, exception.getExitCause());
@@ -159,9 +159,9 @@ class PreComputeArgsTests {
 
     @Test
     void shouldCreateEmptyInputFilesListWhenNumberIsZero(EnvironmentVariables environment) throws Exception {
-        environment.set(IEXEC_PRE_COMPUTE_OUT.name(), OUTPUT_DIR);
-        environment.set(IS_DATASET_REQUIRED.name(), "false");
-        environment.set(IEXEC_INPUT_FILES_NUMBER.name(), "0");
+        environment.set(IEXEC_PRE_COMPUTE_OUT, OUTPUT_DIR);
+        environment.set(IS_DATASET_REQUIRED, "false");
+        environment.set(IEXEC_INPUT_FILES_NUMBER, "0");
         PreComputeArgs args = PreComputeArgs.readArgs(CHAIN_TASK_ID);
         assertNotNull(args.getInputFiles());
         assertEquals(0, args.getInputFiles().size());
@@ -169,9 +169,9 @@ class PreComputeArgsTests {
 
     @Test
     void shouldHandleInvalidInputFilesNumberFormat(EnvironmentVariables environment) {
-        environment.set(IEXEC_PRE_COMPUTE_OUT.name(), OUTPUT_DIR);
-        environment.set(IS_DATASET_REQUIRED.name(), "false");
-        environment.set(IEXEC_INPUT_FILES_NUMBER.name(), "not-a-number");
+        environment.set(IEXEC_PRE_COMPUTE_OUT, OUTPUT_DIR);
+        environment.set(IS_DATASET_REQUIRED, "false");
+        environment.set(IEXEC_INPUT_FILES_NUMBER, "not-a-number");
         assertThrows(NumberFormatException.class, () -> PreComputeArgs.readArgs(CHAIN_TASK_ID));
     }
 }

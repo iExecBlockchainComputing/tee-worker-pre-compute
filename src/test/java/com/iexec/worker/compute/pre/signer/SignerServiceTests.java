@@ -50,8 +50,8 @@ class SignerServiceTests {
 
     @Test
     void shouldGetChallenge(EnvironmentVariables environment) throws Exception {
-        environment.set(SIGN_WORKER_ADDRESS.name(), WORKER_ADDRESS);
-        environment.set(SIGN_TEE_CHALLENGE_PRIVATE_KEY.name(), ENCLAVE_CHALLENGE_PRIVATE_KEY);
+        environment.set(SIGN_WORKER_ADDRESS, WORKER_ADDRESS);
+        environment.set(SIGN_TEE_CHALLENGE_PRIVATE_KEY, ENCLAVE_CHALLENGE_PRIVATE_KEY);
         String actualMessageHash = HashUtils.concatenateAndHash(CHAIN_TASK_ID, WORKER_ADDRESS);
         String expectedSignature = signerService.signEnclaveChallenge(actualMessageHash, ENCLAVE_CHALLENGE_PRIVATE_KEY);
         String actualChallenge = signerService.getChallenge(CHAIN_TASK_ID);
@@ -60,7 +60,7 @@ class SignerServiceTests {
 
     @Test
     void shouldThrowWhenWorkerAddressEnvironmentVariableMissing(EnvironmentVariables environment) {
-        environment.set(SIGN_TEE_CHALLENGE_PRIVATE_KEY.name(), ENCLAVE_CHALLENGE_PRIVATE_KEY);
+        environment.set(SIGN_TEE_CHALLENGE_PRIVATE_KEY, ENCLAVE_CHALLENGE_PRIVATE_KEY);
         PreComputeException exception = assertThrows(PreComputeException.class,
                 () -> signerService.getChallenge(CHAIN_TASK_ID));
         assertEquals(PRE_COMPUTE_WORKER_ADDRESS_MISSING, exception.getExitCause());
@@ -68,7 +68,7 @@ class SignerServiceTests {
 
     @Test
     void shouldThrowWhenChallengePrivateKeyEnvironmentVariableMissing(EnvironmentVariables environment) {
-        environment.set(SIGN_WORKER_ADDRESS.name(), WORKER_ADDRESS);
+        environment.set(SIGN_WORKER_ADDRESS, WORKER_ADDRESS);
         PreComputeException exception = assertThrows(PreComputeException.class,
                 () -> signerService.getChallenge(CHAIN_TASK_ID));
         assertEquals(PRE_COMPUTE_TEE_CHALLENGE_PRIVATE_KEY_MISSING, exception.getExitCause());
