@@ -2,6 +2,21 @@
 
 All notable changes to this project will be documented in this file.
 
+## [[9.0.0]](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/releases/tag/v9.0.0) 2025-03-28
+
+### New Features
+
+- Update build to run application in Scone framework 5.7 and 5.9 enlaves. (#96)
+- Decrypt base64 encoded key before calling CipherUtils to decrypt a dataset to embrace API breaking changes in iexec-common. (#98)
+- Add authorization proof to requests sending data to the worker. (#99)
+
+### Dependency Upgrades
+
+- Upgrade to `eclipse-temurin:17.0.13_11-jre-focal`. (#95)
+- Upgrade to Spring Boot 3.3.8. (#97)
+- Upgrade to `iexec-common` 9.0.0. (#101)
+- Upgrade to `iexec-commons-poco` 5.0.0. (#101)
+
 ## [[8.6.0]](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/releases/tag/v8.6.0) 2024-12-20
 
 ### New Features

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import com.iexec.commons.poco.utils.MultiAddressHelper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.security.GeneralSecurityException;
+import java.util.Base64;
 
 @Slf4j
 public class PreComputeApp {
@@ -47,8 +47,8 @@ public class PreComputeApp {
         preComputeArgs = PreComputeArgs.readArgs(chainTaskId);
         checkOutputFolder();
         if (preComputeArgs.isDatasetRequired()) {
-            byte[] encryptedContent = downloadEncryptedDataset();
-            byte[] plainContent = decryptDataset(encryptedContent);
+            final byte[] encryptedContent = downloadEncryptedDataset();
+            final byte[] plainContent = decryptDataset(encryptedContent);
             savePlainDatasetFile(plainContent);
         }
         downloadInputFiles();
@@ -60,7 +60,7 @@ public class PreComputeApp {
      * @throws PreComputeException if output folder not found
      */
     void checkOutputFolder() throws PreComputeException {
-        String outputDir = getPreComputeArgs().getOutputDir();
+        final String outputDir = getPreComputeArgs().getOutputDir();
         log.info("Checking output folder [chainTaskId:{}, path:{}]",
                 chainTaskId, outputDir);
         if (new File(outputDir).isDirectory()) {
@@ -78,7 +78,7 @@ public class PreComputeApp {
      * @throws PreComputeException if download fails or bad file checksum
      */
     byte[] downloadEncryptedDataset() throws PreComputeException {
-        String encryptedDatasetUrl = getPreComputeArgs().getEncryptedDatasetUrl();
+        final String encryptedDatasetUrl = getPreComputeArgs().getEncryptedDatasetUrl();
         log.info("Downloading encrypted dataset file [chainTaskId:{}, url:{}]",
                 chainTaskId, encryptedDatasetUrl);
         byte[] encryptedContent = null;
@@ -99,8 +99,8 @@ public class PreComputeApp {
             throw new PreComputeException(ReplicateStatusCause.PRE_COMPUTE_DATASET_DOWNLOAD_FAILED);
         }
         log.info("Checking encrypted dataset checksum [chainTaskId:{}]", chainTaskId);
-        String expectedChecksum = getPreComputeArgs().getEncryptedDatasetChecksum();
-        String actualChecksum = HashUtils.sha256(encryptedContent);
+        final String expectedChecksum = getPreComputeArgs().getEncryptedDatasetChecksum();
+        final String actualChecksum = HashUtils.sha256(encryptedContent);
         if (!actualChecksum.equals(expectedChecksum)) {
             log.info("Invalid dataset checksum [chainTaskId:{}, expected:{}, actual:{}]",
                     chainTaskId, expectedChecksum, actualChecksum);
@@ -116,14 +116,15 @@ public class PreComputeApp {
      * @return plain dataset content bytes
      * @throws PreComputeException if decryption fails
      */
-    byte[] decryptDataset(byte[] encryptedContent) throws PreComputeException {
+    byte[] decryptDataset(final byte[] encryptedContent) throws PreComputeException {
         log.info("Decrypting dataset [chainTaskId:{}]", chainTaskId);
-        String key = getPreComputeArgs().getEncryptedDatasetBase64Key();
         try {
-            byte[] plainDatasetContent = CipherUtils.aesDecrypt(encryptedContent, key.getBytes());
+            final String key = getPreComputeArgs().getEncryptedDatasetBase64Key();
+            final byte[] decodeKey = Base64.getDecoder().decode(key);
+            final byte[] plainDatasetContent = CipherUtils.aesDecrypt(encryptedContent, decodeKey);
             log.info("Decrypted dataset [chainTaskId:{}]", chainTaskId);
             return plainDatasetContent;
-        } catch (GeneralSecurityException e) {
+        } catch (Exception e) {
             log.error("Failed to decrypt dataset [chainTaskId:{}]", chainTaskId, e);
             throw new PreComputeException(ReplicateStatusCause.PRE_COMPUTE_DATASET_DECRYPTION_FAILED);
         }
@@ -137,8 +138,8 @@ public class PreComputeApp {
      * @param plainContent bytes
      * @throws PreComputeException if saving the file fails
      */
-    void savePlainDatasetFile(byte[] plainContent) throws PreComputeException {
-        String plainDatasetFilepath = getPreComputeArgs().getOutputDir() + File.separator +
+    void savePlainDatasetFile(final byte[] plainContent) throws PreComputeException {
+        final String plainDatasetFilepath = getPreComputeArgs().getOutputDir() + File.separator +
                 getPreComputeArgs().getPlainDatasetFilename();
         log.info("Saving plain dataset file [chainTaskId:{}, path:{}]",
                 chainTaskId, plainDatasetFilepath);
@@ -157,7 +158,7 @@ public class PreComputeApp {
      * @throws PreComputeException if download of one of the files fails
      */
     void downloadInputFiles() throws PreComputeException {
-        for (String url : getPreComputeArgs().getInputFiles()) {
+        for (final String url : getPreComputeArgs().getInputFiles()) {
             log.info("Downloading input file [chainTaskId:{}, url:{}]", chainTaskId, url);
             if (FileHelper.downloadFile(url, getPreComputeArgs().getOutputDir(), FileHashUtils.createFileNameFromUri(url))
                     .isEmpty()) {
