@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## 9.0.1 (2025-05-13)
+
+
+### Bug Fixes
+
+* Add missing logback-classic dependency ([#104](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/issues/104)) ([e1c0ee0](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/commit/e1c0ee00111b9c17e03f38fd220eb7e3404728f1))
+
+
+### Miscellaneous Chores
+
+* release 9.0.1 ([#106](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/issues/106)) ([ef36656](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/commit/ef36656d069a700a46e9e086091c0d48acad7c6a))
+
 ## [[9.0.0]](https://github.com/iExecBlockchainComputing/tee-worker-pre-compute/releases/tag/v9.0.0) 2025-03-28
 
 ### New Features
