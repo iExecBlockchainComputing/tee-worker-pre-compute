@@ -55,6 +55,9 @@ dependencies {
 
     // apache commons.lang3
     implementation 'org.apache.commons:commons-lang3'
+
+    // logback
+    runtimeOnly 'ch.qos.logback:logback-classic'
 }
 
 java {
