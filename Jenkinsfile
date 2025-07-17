@@ -28,7 +28,7 @@ sconeBuildUnlocked(
         imageName:       repositoryName,
         imageTag:        buildInfo.imageTag,
         sconifyArgsPath: './docker/sconify.args',
-        sconifyVersion:  '5.7.6'
+        sconifyVersion:  '5.7.7'
 )
 
 sconeBuildUnlocked(
@@ -36,5 +36,5 @@ sconeBuildUnlocked(
         imageName:       repositoryName,
         imageTag:        buildInfo.imageTag,
         sconifyArgsPath: './docker/sconify.args',
-        sconifyVersion:  '5.9.0'
+        sconifyVersion:  '5.9.1'
 )
