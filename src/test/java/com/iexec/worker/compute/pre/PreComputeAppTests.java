@@ -1,5 +1,5 @@
 /*
- * Copyright 2020 IEXEC BLOCKCHAIN TECH
+ * Copyright 2020-2025 IEXEC BLOCKCHAIN TECH
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ import static org.mockito.Mockito.*;
 class PreComputeAppTests {
 
     private static final String REPO_URL = "https://raw.githubusercontent.com/" +
-            "iExecBlockchainComputing/tee-worker-pre-compute/develop/src/test/resources/";
+            "iExecBlockchainComputing/tee-worker-pre-compute/main/src/test/resources/";
 
     private static final String CHAIN_TASK_ID = "0xabc";
     private static final String DATASET_FILENAME = "my-dataset";
