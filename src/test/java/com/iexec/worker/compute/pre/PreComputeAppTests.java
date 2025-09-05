@@ -88,7 +88,8 @@ class PreComputeAppTests {
                 IEXEC_DATASET_FILENAME, DATASET_FILENAME,
                 IEXEC_INPUT_FILES_NUMBER, 2,
                 IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_1_URL,
-                IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_2_URL
+                IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_2_URL,
+                BULK_SIZE, 0
         );
 
         final byte[] encryptedDataset = "encryptedDataset".getBytes();
@@ -111,7 +112,8 @@ class PreComputeAppTests {
                 IS_DATASET_REQUIRED, false,
                 IEXEC_INPUT_FILES_NUMBER, 2,
                 IEXEC_INPUT_FILE_URL_PREFIX + "1", INPUT_FILE_1_URL,
-                IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_2_URL
+                IEXEC_INPUT_FILE_URL_PREFIX + "2", INPUT_FILE_2_URL,
+                BULK_SIZE, 0
         );
 
         doNothing().when(preComputeApp).checkOutputFolder();

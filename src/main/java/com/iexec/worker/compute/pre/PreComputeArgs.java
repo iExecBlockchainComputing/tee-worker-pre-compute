@@ -45,6 +45,8 @@ public class PreComputeArgs {
     private String plainDatasetFilename;
     // input files
     private List<String> inputFiles;
+    // bulk datasets
+    private List<BulkDataset> bulkDatasets;
 
     public static PreComputeArgs readArgs(String chainTaskId) throws PreComputeException {
         PreComputeArgs args = PreComputeArgs.builder()
@@ -52,6 +54,7 @@ public class PreComputeArgs {
                 .outputDir(getEnvVarOrThrow(IEXEC_PRE_COMPUTE_OUT, ReplicateStatusCause.PRE_COMPUTE_OUTPUT_PATH_MISSING))
                 .isDatasetRequired(Boolean.parseBoolean(getEnvVarOrThrow(IS_DATASET_REQUIRED, ReplicateStatusCause.PRE_COMPUTE_IS_DATASET_REQUIRED_MISSING)))
                 .inputFiles(new ArrayList<>())
+                .bulkDatasets(new ArrayList<>())
                 .build();
         if (args.isDatasetRequired()) {
             args.setEncryptedDatasetUrl(getEnvVarOrThrow(IEXEC_DATASET_URL, ReplicateStatusCause.PRE_COMPUTE_DATASET_URL_MISSING));
@@ -64,7 +67,20 @@ public class PreComputeArgs {
             String url = getEnvVarOrThrow(IEXEC_INPUT_FILE_URL_PREFIX + i, ReplicateStatusCause.PRE_COMPUTE_AT_LEAST_ONE_INPUT_FILE_URL_MISSING);
             args.getInputFiles().add(url);
         }
+        int bulkSize = Integer.parseInt(getEnvVarOrThrow(BULK_SIZE, ReplicateStatusCause.PRE_COMPUTE_FAILED_UNKNOWN_ISSUE));
+        log.info("bulk configuration detected [size:{}]", bulkSize);
+        for (int i = 0; i < bulkSize; i++) {
+            final String prefix = "BULK_DATASET_" + i;
+            final String url = getEnvVarOrThrow(prefix + "_URL", ReplicateStatusCause.PRE_COMPUTE_FAILED_UNKNOWN_ISSUE);
+            final String checksum = getEnvVarOrThrow(prefix + "_CHECKSUM", ReplicateStatusCause.PRE_COMPUTE_FAILED_UNKNOWN_ISSUE);
+            final String key = getEnvVarOrThrow(prefix + "_KEY", ReplicateStatusCause.PRE_COMPUTE_FAILED_UNKNOWN_ISSUE);
+            args.getBulkDatasets().add(new BulkDataset(url, checksum, key));
+        }
+        log.info("bulk dataset [sie:{}]", args.getBulkDatasets().size());
         return args;
+    }
+
+    public record BulkDataset(String url, String checksum, String key) {
     }
 
 }

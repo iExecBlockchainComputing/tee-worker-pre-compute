@@ -43,6 +43,7 @@ class PreComputeArgsTests {
 
     @Test
     void shouldReadArgsWithoutDataset(EnvironmentVariables environment) throws Exception {
+        environment.set(BULK_SIZE, 0);
         environment.set(IEXEC_PRE_COMPUTE_OUT, OUTPUT_DIR);
         environment.set(IS_DATASET_REQUIRED, "false");
         environment.set(IEXEC_INPUT_FILES_NUMBER, "1");
@@ -57,6 +58,7 @@ class PreComputeArgsTests {
 
     @Test
     void shouldReadArgsWithDataset(EnvironmentVariables environment) throws Exception {
+        environment.set(BULK_SIZE, 0);
         environment.set(IEXEC_PRE_COMPUTE_OUT, OUTPUT_DIR);
         environment.set(IS_DATASET_REQUIRED, "true");
         environment.set(IEXEC_DATASET_URL, DATASET_URL);
@@ -77,6 +79,7 @@ class PreComputeArgsTests {
 
     @Test
     void shouldReadArgsWithMultipleInputFiles(EnvironmentVariables environment) throws Exception {
+        environment.set(BULK_SIZE, 0);
         environment.set(IEXEC_PRE_COMPUTE_OUT, OUTPUT_DIR);
         environment.set(IS_DATASET_REQUIRED, "false");
         environment.set(IEXEC_INPUT_FILES_NUMBER, "2");
@@ -159,6 +162,7 @@ class PreComputeArgsTests {
 
     @Test
     void shouldCreateEmptyInputFilesListWhenNumberIsZero(EnvironmentVariables environment) throws Exception {
+        environment.set(BULK_SIZE, 0);
         environment.set(IEXEC_PRE_COMPUTE_OUT, OUTPUT_DIR);
         environment.set(IS_DATASET_REQUIRED, "false");
         environment.set(IEXEC_INPUT_FILES_NUMBER, "0");
